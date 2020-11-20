@@ -1,9 +1,12 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"fmt"
+
+	"github.com/Drinkey/keyvault/internal"
 )
 
 func main() {
-	...
+	fmt.Println(internal.DoNothing())
+
 }

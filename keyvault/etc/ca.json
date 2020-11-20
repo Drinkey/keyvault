@@ -1,0 +1,13 @@
+{
+    "serial_number": 20001,
+    "subject": {
+        "organization": "Key Vault, INC.",
+        "country": "CN",
+        "province": "",
+        "locality": "",
+        "address": "",
+        "postal_code": ""
+    },
+    "valid_year": 5,
+    "key_length": 4096
+}

@@ -1,0 +1,14 @@
+{
+    "serial_number": 29001,
+    "subject": {
+        "organization": "Key Vault, INC.",
+        "country": "CN",
+        "province": "",
+        "locality": "",
+        "address": "",
+        "postal_code": ""
+    },
+    "ip4addr": "0.0.0.0",
+    "valid_year": 5,
+    "key_length": 4096
+}
