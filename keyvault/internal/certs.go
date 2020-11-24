@@ -11,28 +11,41 @@ import (
 	"io/ioutil"
 	"log"
 	"math/big"
+	"net"
 )
 
-func CreateCACertificate() error {
-	log.Printf("Creating CA Certificate %s with %s", CA_FILE, CA_CONF)
-	configFile := fmt.Sprintf("%s/%s", CONF_DIR, CA_CONF)
+type CertificateAuthority struct {
+	CaCert    *x509.Certificate
+	CaPrivKey *rsa.PrivateKey
+}
+
+func LoadCACertificate(certs CertFiles) (CertificateAuthority, error) {
+	return CertificateAuthority{}, nil
+}
+
+func getSubjectName(sc SubjectConfig) pkix.Name {
+	return pkix.Name{
+		Organization:  []string{sc.Organization},
+		Country:       []string{sc.Country},
+		Province:      []string{sc.Province},
+		Locality:      []string{sc.Locality},
+		StreetAddress: []string{sc.Address},
+		PostalCode:    []string{sc.PostalCode},
+	}
+}
+
+func InitCACertificate(f CertFiles) (CertificateAuthority, error) {
+	log.Printf("Creating CA Certificate %s with %s", f.CaCert, f.CaCertConf)
 
 	config := CAConfig{}
-	CaConfigParser(configFile, &config)
+	CaConfigParser(f.CaCertConf, &config)
 	fmt.Println(config)
 
 	NotBefore, NotAfter := TimeRange(config.Valid)
 
 	ca := &x509.Certificate{
-		SerialNumber: big.NewInt(config.SerialNumber),
-		Subject: pkix.Name{
-			Organization:  []string{config.Subject.Organization},
-			Country:       []string{config.Subject.Country},
-			Province:      []string{config.Subject.Province},
-			Locality:      []string{config.Subject.Locality},
-			StreetAddress: []string{config.Subject.Address},
-			PostalCode:    []string{config.Subject.PostalCode},
-		},
+		SerialNumber:          big.NewInt(config.SerialNumber),
+		Subject:               getSubjectName(config.Subject),
 		NotBefore:             NotBefore,
 		NotAfter:              NotAfter,
 		IsCA:                  true,
@@ -43,12 +56,12 @@ func CreateCACertificate() error {
 
 	caPrivKey, err := rsa.GenerateKey(rand.Reader, config.KeyLength)
 	if err != nil {
-		return err
+		return CertificateAuthority{}, err
 	}
 
 	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
 	if err != nil {
-		return err
+		return CertificateAuthority{}, err
 	}
 
 	caPEM := new(bytes.Buffer)
@@ -56,10 +69,10 @@ func CreateCACertificate() error {
 		Type:  "CERTIFICATE",
 		Bytes: caBytes,
 	})
-	caFile := fmt.Sprintf("%s/%s", CONF_DIR, CA_FILE)
-	err = ioutil.WriteFile(caFile, caPEM.Bytes(), 0600)
+
+	err = ioutil.WriteFile(f.CaCert, caPEM.Bytes(), 0600)
 	if err != nil {
-		return err
+		return CertificateAuthority{}, err
 	}
 
 	caPrivKeyPEM := new(bytes.Buffer)
@@ -67,19 +80,63 @@ func CreateCACertificate() error {
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(caPrivKey),
 	})
-	caPrivKeyFile := fmt.Sprintf("%s/ca_priv.key", CONF_DIR)
-	err = ioutil.WriteFile(caPrivKeyFile, caPrivKeyPEM.Bytes(), 0600)
+
+	err = ioutil.WriteFile(f.CaPrivKey, caPrivKeyPEM.Bytes(), 0600)
+	if err != nil {
+		return CertificateAuthority{}, err
+	}
+
+	return CertificateAuthority{CaCert: ca, CaPrivKey: caPrivKey}, nil
+}
+
+func CreateCertificate(ca CertificateAuthority, f CertFiles) error {
+	log.Printf("Creating Server Certificate %s with %s", f.ServerCert, f.ServerCertConf)
+
+	config := CertConfig{}
+	CertConfigParser(f.ServerCertConf, &config)
+	fmt.Println(config)
+
+	NotBefore, NotAfter := TimeRange(config.Valid)
+
+	cert := &x509.Certificate{
+		SerialNumber: big.NewInt(config.SerialNumber),
+		Subject:      getSubjectName(config.Subject),
+		IPAddresses:  []net.IP{net.ParseIP(config.IPv4Address), net.IPv6loopback},
+		NotBefore:    NotBefore,
+		NotAfter:     NotAfter,
+		SubjectKeyId: []byte{1, 2, 3, 4, 6},
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+	}
+	certPrivKey, err := rsa.GenerateKey(rand.Reader, config.KeyLength)
 	if err != nil {
 		return err
 	}
-	return nil
-}
+	certBytes, err := x509.CreateCertificate(rand.Reader, cert, ca.CaCert, &certPrivKey.PublicKey, ca.CaPrivKey)
+	if err != nil {
+		return err
+	}
 
-func CreateCertificate() error {
-	log.Printf("Creating Certificate %s with %s", CERT_FILE, CERT_CONF)
-	filename := fmt.Sprintf("%s/%s", CONF_DIR, CERT_CONF)
-	data := CertConfig{}
-	CertConfigParser(filename, &data)
-	fmt.Println(data)
+	certPEM := new(bytes.Buffer)
+	pem.Encode(certPEM, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: certBytes,
+	})
+
+	err = ioutil.WriteFile(f.ServerCert, certPEM.Bytes(), 0600)
+	if err != nil {
+		return err
+	}
+
+	certPrivKeyPEM := new(bytes.Buffer)
+	pem.Encode(certPrivKeyPEM, &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(certPrivKey),
+	})
+
+	err = ioutil.WriteFile(f.ServerPrivKey, certPrivKeyPEM.Bytes(), 0600)
+	if err != nil {
+		return err
+	}
 	return nil
 }
