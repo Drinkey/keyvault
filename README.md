@@ -35,37 +35,51 @@ The secret still visible as a plain text to authorized client. If the client cho
 Creating a new secret (human)
 
 ```
-POST /keyvault
+POST /vault/:namespace
 {
-    "name": "K8S_ADMIN_PASSWORD",
+    "key": "K8S_ADMIN_PASSWORD",
     "value": "the!realpassw0rd"
 }
 
-Response
+Response 201
 {
     "message": "success/failed"
 }
 ```
 
+Updating an existing secret (only support updating value since key is the condition to search)
+```
+PUT /vault/:namespace
+{
+    "key": ""
+}
+```
+
+Delete an existing secret
+```
+DELETE /vault/:namespace/?q=<key>
+```
+
 Getting an existing secret (in the program, certificates deployed)
 ```
-GET /keyvault/?s=K8S_ADMIN_PASSWORD
+GET /vault/:namespace/?q=<key>
 
-Response
+Response 200
 {
-    "name": "K8S_ADMIN_PASSWORD",
+    "namespace": "Kubernetes",
+    "key": "K8S_ADMIN_PASSWORD",
     "value": "the!realpassw0rd"
 }
 ```
 
 Issue a CSR (human)
 ```
-POST /keyvault/ca
+POST /cert/sign
 {
     "csr": "<valid_x509_content>"
 }
 
-Response
+Response 201
 {
     "signed": "<valid_x509_content>"
 }
