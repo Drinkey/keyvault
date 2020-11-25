@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/Drinkey/keyvault/internal"
+	"github.com/Drinkey/keyvault/certio"
 )
 
 func main() {
-	fmt.Println(internal.DoNothing())
+	fmt.Println(certio.DoNothing())
 
 }

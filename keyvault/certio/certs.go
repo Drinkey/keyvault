@@ -1,4 +1,4 @@
-package internal
+package certio
 
 import (
 	"bytes"
@@ -12,15 +12,32 @@ import (
 	"log"
 	"math/big"
 	"net"
+
+	"github.com/Drinkey/keyvault/internal"
 )
 
-type CertificateAuthority struct {
-	CaCert    *x509.Certificate
-	CaPrivKey *rsa.PrivateKey
-}
-
 func LoadCACertificate(certs CertFiles) (CertificateAuthority, error) {
-	return CertificateAuthority{}, nil
+	ca_txt, err := ioutil.ReadFile(certs.CaCert)
+	if err != nil {
+		log.Fatal("read certificate file failed", err)
+	}
+	ca_block, _ := pem.Decode([]byte(ca_txt))
+	cacert, err := x509.ParseCertificate(ca_block.Bytes)
+	if err != nil {
+		log.Fatal("parse certificate content failed", err)
+	}
+
+	ca_pkey_txt, err := ioutil.ReadFile(certs.CaPrivKey)
+	if err != nil {
+		log.Fatal("read private key file failed", err)
+	}
+	ca_pkey_block, _ := pem.Decode([]byte(ca_pkey_txt))
+	ca_pkey, err := x509.ParsePKCS1PrivateKey(ca_pkey_block.Bytes)
+	if err != nil {
+		log.Fatal("parse private key content failed", err)
+	}
+
+	return CertificateAuthority{CaCert: cacert, CaPrivKey: ca_pkey}, nil
 }
 
 func getSubjectName(sc SubjectConfig) pkix.Name {
@@ -41,7 +58,7 @@ func InitCACertificate(f CertFiles) (CertificateAuthority, error) {
 	CaConfigParser(f.CaCertConf, &config)
 	fmt.Println(config)
 
-	NotBefore, NotAfter := TimeRange(config.Valid)
+	NotBefore, NotAfter := internal.TimeRange(config.Valid)
 
 	ca := &x509.Certificate{
 		SerialNumber:          big.NewInt(config.SerialNumber),
@@ -96,7 +113,7 @@ func CreateCertificate(ca CertificateAuthority, f CertFiles) error {
 	CertConfigParser(f.ServerCertConf, &config)
 	fmt.Println(config)
 
-	NotBefore, NotAfter := TimeRange(config.Valid)
+	NotBefore, NotAfter := internal.TimeRange(config.Valid)
 
 	cert := &x509.Certificate{
 		SerialNumber: big.NewInt(config.SerialNumber),
