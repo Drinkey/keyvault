@@ -1,12 +1,12 @@
 {
     "serial_number": 20001,
     "subject": {
-        "organization": "Key Vault, INC.",
+        "organization": "Key Vault - RootCA, ORG.",
         "country": "CN",
-        "province": "",
-        "locality": "",
-        "address": "",
-        "postal_code": ""
+        "province": "SC",
+        "locality": "CD",
+        "address": "TSP",
+        "postal_code": "68001"
     },
     "valid_year": 5,
     "key_length": 4096
