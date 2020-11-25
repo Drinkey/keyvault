@@ -12,6 +12,7 @@ import (
 	"log"
 	"math/big"
 	"net"
+	"os"
 
 	"github.com/Drinkey/keyvault/internal"
 )
@@ -51,6 +52,16 @@ func getSubjectName(sc SubjectConfig) pkix.Name {
 	}
 }
 
+func SavePemFile(certype string, content []byte, filename string, perm os.FileMode) error {
+	PEM := new(bytes.Buffer)
+	pem.Encode(PEM, &pem.Block{
+		Type:  certype,
+		Bytes: content,
+	})
+
+	return ioutil.WriteFile(filename, PEM.Bytes(), 0600)
+}
+
 func InitCACertificate(f CertFiles) (CertificateAuthority, error) {
 	log.Printf("Creating CA Certificate %s with %s", f.CaCert, f.CaCertConf)
 
@@ -75,30 +86,16 @@ func InitCACertificate(f CertFiles) (CertificateAuthority, error) {
 	if err != nil {
 		return CertificateAuthority{}, err
 	}
+	err = SavePemFile("RSA PRIVATE KEY", x509.MarshalPKCS1PrivateKey(caPrivKey), f.CaPrivKey, 0600)
+	if err != nil {
+		return CertificateAuthority{}, err
+	}
 
 	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
 	if err != nil {
 		return CertificateAuthority{}, err
 	}
-
-	caPEM := new(bytes.Buffer)
-	pem.Encode(caPEM, &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: caBytes,
-	})
-
-	err = ioutil.WriteFile(f.CaCert, caPEM.Bytes(), 0600)
-	if err != nil {
-		return CertificateAuthority{}, err
-	}
-
-	caPrivKeyPEM := new(bytes.Buffer)
-	pem.Encode(caPrivKeyPEM, &pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(caPrivKey),
-	})
-
-	err = ioutil.WriteFile(f.CaPrivKey, caPrivKeyPEM.Bytes(), 0600)
+	err = SavePemFile("CERTIFICATE", caBytes, f.CaCert, 0600)
 	if err != nil {
 		return CertificateAuthority{}, err
 	}
@@ -129,31 +126,19 @@ func CreateCertificate(ca CertificateAuthority, f CertFiles) error {
 	if err != nil {
 		return err
 	}
+	err = SavePemFile("RSA PRIVATE KEY", x509.MarshalPKCS1PrivateKey(certPrivKey), f.ServerPrivKey, 0600)
+	if err != nil {
+		return err
+	}
+
 	certBytes, err := x509.CreateCertificate(rand.Reader, cert, ca.CaCert, &certPrivKey.PublicKey, ca.CaPrivKey)
 	if err != nil {
 		return err
 	}
-
-	certPEM := new(bytes.Buffer)
-	pem.Encode(certPEM, &pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: certBytes,
-	})
-
-	err = ioutil.WriteFile(f.ServerCert, certPEM.Bytes(), 0600)
+	err = SavePemFile("CERTIFICATE", certBytes, f.ServerCert, 0600)
 	if err != nil {
 		return err
 	}
 
-	certPrivKeyPEM := new(bytes.Buffer)
-	pem.Encode(certPrivKeyPEM, &pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(certPrivKey),
-	})
-
-	err = ioutil.WriteFile(f.ServerPrivKey, certPrivKeyPEM.Bytes(), 0600)
-	if err != nil {
-		return err
-	}
 	return nil
 }

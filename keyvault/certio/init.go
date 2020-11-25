@@ -31,6 +31,8 @@ func GetCertFiles(dir string) CertFiles {
 }
 
 func init() {
+	log.SetPrefix("certio: ")
+	log.Print("init()")
 	certs := GetCertFiles(CONF_DIR)
 	if !internal.FileExist(certs.CaCert) {
 		log.Print("CA Cert is not exist, try to create new CA")

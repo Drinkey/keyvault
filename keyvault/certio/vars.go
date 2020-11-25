@@ -23,7 +23,7 @@ type SubjectConfig struct {
 type CAConfig struct {
 	SerialNumber int64         `json:"serial_number"`
 	Subject      SubjectConfig `json:"subject"`
-	Valid        int           `json:"valid"`
+	Valid        int           `json:"valid_year"`
 	KeyLength    int           `json:"key_length"`
 }
 
@@ -31,7 +31,7 @@ type CertConfig struct {
 	SerialNumber int64         `json:"serial_number"`
 	Subject      SubjectConfig `json:"subject"`
 	IPv4Address  string        `json:"ip4addr"`
-	Valid        int           `json:"valid"`
+	Valid        int           `json:"valid_year"`
 	KeyLength    int           `json:"key_length"`
 }
 
