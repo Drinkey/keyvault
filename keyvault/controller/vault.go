@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Drinkey/keyvault/internal"
 	"github.com/Drinkey/keyvault/model"
 	"github.com/gin-gonic/gin"
 )
@@ -33,6 +34,9 @@ func QuerySecret(c *gin.Context) {
 		return
 	}
 
+	secret.Value = internal.Decrypt(secret.Value, secret.NameSpace.MasterKey)
+	secret.NameSpace.MasterKey = "******"
+
 	c.JSON(http.StatusOK, secret)
 }
 
@@ -42,11 +46,11 @@ func CreateSecret(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	name := secret.Key
-	value := secret.Value
-	c.JSON(http.StatusCreated, gin.H{
-		"message": fmt.Sprintf("secret %s with value %s created success", name, value),
-	})
+	// var db model.Secrets
+	// newSecret := db.Create(secret)
+	// c.JSON(http.StatusCreated, gin.H{
+	// 	"message": fmt.Sprintf("secret %s with value %s created success", name, value),
+	// })
 }
 
 func DeleteSecret(c *gin.Context) {
