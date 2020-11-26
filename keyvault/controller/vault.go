@@ -24,9 +24,10 @@ func ListVault(c *gin.Context) {
 }
 
 func QuerySecret(c *gin.Context) {
-	key := c.Query("s")
+	namespace := c.Param("namespace")
+	key := c.Query("q")
 	c.JSON(http.StatusOK, gin.H{
-		"name":  key,
+		"key":   key,
 		"value": "some_secrets",
 	})
 }
