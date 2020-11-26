@@ -6,18 +6,19 @@ import (
 	"os"
 )
 
-const KEY_DB_SCHEMA = `
-CREATE TABLE vault (
+const SECRET_DB_SCHEMA = `
+CREATE TABLE secrets (
     id integer not null primary key,
-    namespace text not null,
+    ns_id text not null,
     key text,
-    value text
+	value text,
+	FORGIN KEY (ns_id) REFERENCES namespace(id)
     );
 `
-const MASTER_KEY_SCHEMA = `
-CREATE TABLE masterkey (
+const NS_DB_SCHEMA = `
+CREATE TABLE namespace (
     id integer not null primary key,
-    namespace text not null,
+    name text not null,
     master_key text
     );
 `
@@ -53,17 +54,17 @@ func init() {
 
 	if initDbRequired {
 		log.Println("first install, initializing database schema")
-		_, err = conn.Exec(KEY_DB_SCHEMA)
+		_, err = conn.Exec(NS_DB_SCHEMA)
 		if err != nil {
-			log.Fatalf("db %q: %s\n", err, KEY_DB_SCHEMA)
+			log.Fatalf("db %q: %s\n", err, NS_DB_SCHEMA)
 		}
-		log.Printf("Table %s created", DBPATH)
+		log.Printf("Table namespace created")
 
-		_, err = conn.Exec(MASTER_KEY_SCHEMA)
+		_, err = conn.Exec(SECRET_DB_SCHEMA)
 		if err != nil {
-			log.Fatalf("db %q: %s\n", err, MASTER_KEY_SCHEMA)
+			log.Fatalf("db %q: %s\n", err, SECRET_DB_SCHEMA)
 		}
-		log.Printf("Table masterkey created")
+		log.Printf("Table secret created")
 	}
 
 }
