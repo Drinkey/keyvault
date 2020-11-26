@@ -15,7 +15,8 @@ CREATE TABLE secrets (
     key TEXT,
     value TEXT,
     namespace_id INTEGER NOT NULL,
-    FOREIGN KEY(namespace_id) REFERENCES namespace(namespace_id)
+	FOREIGN KEY(namespace_id) REFERENCES namespace(namespace_id),
+	UNIQUE (namespace_id, key)
     );
 `
 const NS_DB_SCHEMA = `
@@ -31,7 +32,7 @@ var DBPATH string = os.Getenv("DB_PATH")
 var conn *sql.DB
 
 func init() {
-	log.SetPrefix("model - init():")
+	log.SetPrefix("model - ")
 	log.Println("initializing database")
 
 	if DBPATH == "" {
