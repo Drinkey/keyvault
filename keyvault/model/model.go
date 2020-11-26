@@ -4,22 +4,25 @@ import (
 	"database/sql"
 	"log"
 	"os"
+
+	"github.com/Drinkey/keyvault/internal"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const SECRET_DB_SCHEMA = `
 CREATE TABLE secrets (
-    id integer not null primary key,
-    ns_id text not null,
-    key text,
-	value text,
-	FORGIN KEY (ns_id) REFERENCES namespace(id)
+    id INTEGER PRIMARY KEY,
+    key TEXT,
+    value TEXT,
+    namespace_id INTEGER NOT NULL,
+    FOREIGN KEY(namespace_id) REFERENCES namespace(namespace_id)
     );
 `
 const NS_DB_SCHEMA = `
 CREATE TABLE namespace (
-    id integer not null primary key,
-    name text not null,
-    master_key text
+    namespace_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    master_key TEXT
     );
 `
 
