@@ -4,13 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Drinkey/keyvault/model"
 	"github.com/gin-gonic/gin"
 )
-
-type Secrets struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
 
 type Vault struct {
 	Name string `json:"name"`
@@ -26,19 +22,27 @@ func ListVault(c *gin.Context) {
 func QuerySecret(c *gin.Context) {
 	namespace := c.Param("namespace")
 	key := c.Query("q")
-	c.JSON(http.StatusOK, gin.H{
-		"key":   key,
-		"value": "some_secrets",
-	})
+
+	var db model.Secrets
+	secret := db.Get(key, namespace)
+
+	if secret.IsEmpty() {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": fmt.Sprintf("Record Not Found: NameSpace=%s, Key=%s", namespace, key),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, secret)
 }
 
 func CreateSecret(c *gin.Context) {
-	var secret Secrets
+	var secret model.Secrets
 	if err := c.ShouldBindJSON(&secret); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	name := secret.Name
+	name := secret.Key
 	value := secret.Value
 	c.JSON(http.StatusCreated, gin.H{
 		"message": fmt.Sprintf("secret %s with value %s created success", name, value),
