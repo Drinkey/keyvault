@@ -1,4 +1,4 @@
-package controller
+package secret
 
 import (
 	"fmt"
@@ -10,23 +10,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Vault struct {
-	Name string `json:"name"`
-}
-
-func ListVault(c *gin.Context) {
-	vaults := []Vault{Vault{Name: "vault1"}, Vault{Name: "vault2"}}
-	c.JSON(http.StatusOK, gin.H{
-		"vaults": vaults,
-	})
-}
-
-func QuerySecret(c *gin.Context) {
+func Query(c *gin.Context) {
 	namespace := c.Param("namespace")
 	key := c.Query("q")
 
-	var db model.Secrets
-	secret := db.Get(key, namespace)
+	var secret_model model.Secrets
+	secret := secret_model.Get(key, namespace)
 
 	if secret.IsEmpty() {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -41,41 +30,53 @@ func QuerySecret(c *gin.Context) {
 	c.JSON(http.StatusOK, secret)
 }
 
-func CreateSecret(c *gin.Context) {
+func Create(c *gin.Context) {
 
 	namespace := c.Param("namespace")
 	log.Printf("Creating new secret under %s", namespace)
 
-	var secret model.Secrets
-	if err := c.ShouldBindJSON(&secret); err != nil {
+	var secret_data model.Secrets
+	if err := c.ShouldBindJSON(&secret_data); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	// 1. Query namespace database for id, masterkey
-	var ns model.Namespace
-	secret.NameSpace = ns.Get(namespace)
+	var ns_model model.Namespace
+	ns, err := ns_model.Get(namespace)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if ns.IsEmpty() {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": fmt.Sprintf("namespace %s does not exist, create it first", namespace),
+		})
+		return
+	}
+	secret_data.NameSpace = ns
 	// 2. encrypt secret value with master key
-	secret.Value = internal.Encrypt(secret.Value, secret.NameSpace.MasterKey)
-	fmt.Println(secret)
+	secret_data.Value = internal.Encrypt(secret_data.Value, secret_data.NameSpace.MasterKey)
+	fmt.Println(secret_data)
 	// 3. save to database
 	var secret_model model.Secrets
-	err := secret_model.Create(secret)
+	err = secret_model.Create(secret_data)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
-		"message": fmt.Sprintf("Secret namespace=%s, key=%s created success", namespace, secret.Key),
+		"message": fmt.Sprintf("Secret namespace=%s, key=%s created success", namespace, secret_data.Key),
 	})
 }
 
-func DeleteSecret(c *gin.Context) {
+func Delete(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": fmt.Sprintf("delete"),
 	})
 }
 
-func UpdateSecret(c *gin.Context) {
+func Update(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": fmt.Sprintf("update"),
 	})
