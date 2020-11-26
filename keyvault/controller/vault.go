@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/Drinkey/keyvault/internal"
@@ -41,16 +42,31 @@ func QuerySecret(c *gin.Context) {
 }
 
 func CreateSecret(c *gin.Context) {
+
+	namespace := c.Param("namespace")
+	log.Printf("Creating new secret under %s", namespace)
+
 	var secret model.Secrets
 	if err := c.ShouldBindJSON(&secret); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// var db model.Secrets
-	// newSecret := db.Create(secret)
-	// c.JSON(http.StatusCreated, gin.H{
-	// 	"message": fmt.Sprintf("secret %s with value %s created success", name, value),
-	// })
+	// 1. Query namespace database for id, masterkey
+	var ns model.Namespace
+	secret.NameSpace = ns.Get(namespace)
+	// 2. encrypt secret value with master key
+	secret.Value = internal.Encrypt(secret.Value, secret.NameSpace.MasterKey)
+	fmt.Println(secret)
+	// 3. save to database
+	var secret_model model.Secrets
+	err := secret_model.Create(secret)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{
+		"message": fmt.Sprintf("Secret namespace=%s, key=%s created success", namespace, secret.Key),
+	})
 }
 
 func DeleteSecret(c *gin.Context) {

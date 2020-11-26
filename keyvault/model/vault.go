@@ -35,21 +35,34 @@ func (s Secrets) Get(q string, ns string) Secrets {
 
 	rows, err := conn.Query(sqlStmt)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	var r Secrets
 	for rows.Next() {
 		err = rows.Scan(&r.ID, &r.Key, &r.Value, &r.NameSpace.ID, &r.NameSpace.Name, &r.NameSpace.MasterKey)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 	}
 	return r
 }
 
-func (s Secrets) Create(secret Secrets) {
+func (s Secrets) Create(secret Secrets) error {
+	sqlTemplate := `
+	INSERT INTO secrets
+	(key, value, namespace_id)
+	VALUES 
+	("%s", "%s", (SELECT namespace_id FROM namespace WHERE name="%s"));
+	`
 
+	sqlStmt := fmt.Sprintf(sqlTemplate, secret.Key, secret.Value, secret.NameSpace.Name)
+	_, err := conn.Exec(sqlStmt)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
 }
 
 func Delete() {
