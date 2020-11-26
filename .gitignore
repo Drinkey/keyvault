@@ -16,3 +16,4 @@
 *.key
 *.crt
 *.pem
+*.db
