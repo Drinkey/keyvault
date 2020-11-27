@@ -8,9 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func main() {
-	// fmt.Println(certio.DoNothing())
-	// log.SetPrefix("main: ")
+func setupRouter() *gin.Engine {
 	router := gin.Default()
 	v1 := router.Group("/v1")
 	{
@@ -29,5 +27,12 @@ func main() {
 		// TODO:
 		v1.POST("/certs/sign", controller.SignCSR)
 	}
+	return router
+}
+
+func main() {
+	// fmt.Println(certio.DoNothing())
+	// log.SetPrefix("main: ")
+	router := setupRouter()
 	router.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
