@@ -1,8 +1,10 @@
 package namespace
 
 import (
+	"log"
 	"net/http"
 
+	"github.com/Drinkey/keyvault/internal"
 	"github.com/Drinkey/keyvault/model"
 	"github.com/gin-gonic/gin"
 )

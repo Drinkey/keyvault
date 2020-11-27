@@ -3,6 +3,8 @@ package model
 import (
 	"fmt"
 	"log"
+
+	"github.com/Drinkey/keyvault/internal"
 )
 
 type Namespace struct {

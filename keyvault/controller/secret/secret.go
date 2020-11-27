@@ -25,7 +25,7 @@ func Query(c *gin.Context) {
 	}
 
 	secret.Value = internal.Decrypt(secret.Value, secret.NameSpace.MasterKey)
-	secret.NameSpace.MasterKey = "******"
+	secret.NameSpace.MasterKey = internal.KeyMask
 
 	c.JSON(http.StatusOK, secret)
 }

@@ -2,6 +2,8 @@ package internal
 
 import "fmt"
 
+const KeyMask = "******"
+
 // TODO: implement the master key generation
 func GenerateMasterKey() string {
 	// keyLen := 24
