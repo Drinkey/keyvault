@@ -23,7 +23,8 @@ const NS_DB_SCHEMA = `
 CREATE TABLE namespace (
     namespace_id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
-    master_key TEXT
+	master_key TEXT,
+	CONSTRAINT uniqueName UNIQUE(name)
     );
 `
 
