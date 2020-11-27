@@ -32,10 +32,89 @@ The secret still visible as a plain text to authorized client. If the client cho
 
 ## Usage
 
-Creating a new secret (human)
+### Namespace
+
+Creating a new namespace (aggregation of keys)
+```
+POST /v1/vault/
+{
+    "name": "GRAYLOG_USER"
+}
+
+Response 201
+{
+    "namespace_id":4,
+    "name":"GRAYLOG_USER",
+    "master_key":"******"
+}
+```
+
+Listing all namespaces
+```
+GET /v1/vault
+
+Response 200
+{
+    "namespace": [
+        {
+            "namespace_id": 1,
+            "name": "GITLAB",
+            "master_key": "******"
+        },
+        {
+            "namespace_id": 2,
+            "name": "GITLAB_CI",
+            "master_key": "******"
+        },
+        {
+            "namespace_id": 3,
+            "name": "GRAYLOG_USER",
+            "master_key": "******"
+        }
+    ]
+}
+```
+
+### Secrets
+
+List all secrets of a namespace
+```
+GET /v1/vault/:namespace
+
+Response 200
+{
+    "Kubernetes": [
+        {
+            "namespace": "Kubernetes",
+            "key": "K8S_LB_PASSWORD",
+            "value": "the!realpassw0rd"
+        },
+        {
+            "namespace": "Kubernetes",
+            "key": "K8S_ADMIN_PASSWORD",
+            "value": "the!realpassw0rd"
+        }
+    ]
+}
 
 ```
-POST /vault/:namespace
+
+Getting an existing secret (in the client program, certificates deployed)
+```
+GET /v1/vault/:namespace/?q=<key>
+
+Response 200
+{
+    "namespace": "Kubernetes",
+    "key": "K8S_ADMIN_PASSWORD",
+    "value": "the!realpassw0rd"
+}
+```
+
+Creating a new secret
+
+```
+POST /v1/vault/:namespace
 {
     "key": "K8S_ADMIN_PASSWORD",
     "value": "the!realpassw0rd"
@@ -49,7 +128,7 @@ Response 201
 
 Updating an existing secret (only support updating value since key is the condition to search)
 ```
-PUT /vault/:namespace
+PUT /v1/vault/:namespace
 {
     "key": ""
 }
@@ -57,24 +136,14 @@ PUT /vault/:namespace
 
 Delete an existing secret
 ```
-DELETE /vault/:namespace/?q=<key>
+DELETE /v1/vault/:namespace/?q=<key>
 ```
 
-Getting an existing secret (in the program, certificates deployed)
-```
-GET /vault/:namespace/?q=<key>
-
-Response 200
-{
-    "namespace": "Kubernetes",
-    "key": "K8S_ADMIN_PASSWORD",
-    "value": "the!realpassw0rd"
-}
-```
+### Certificate
 
 Issue a CSR (human)
 ```
-POST /cert/sign
+POST /v1/cert/sign
 {
     "csr": "<valid_x509_content>"
 }
