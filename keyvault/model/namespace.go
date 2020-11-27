@@ -58,13 +58,30 @@ func (ns Namespace) List() []Namespace {
 
 	var namespaces []Namespace
 	for rows.Next() {
-		var ns Namespace
-		err = rows.Scan(&ns.ID, &ns.Name)
+		var _ns Namespace
+		err = rows.Scan(&_ns.ID, &_ns.Name)
 		if err != nil {
 			log.Fatal(err)
 		}
-		ns.MasterKey = "******"
-		namespaces = append(namespaces, ns)
+		_ns.MasterKey = internal.KeyMask
+		namespaces = append(namespaces, _ns)
 	}
 	return namespaces
+}
+
+func (ns Namespace) Create(n Namespace) error {
+	sqlTemplate := `
+		INSERT INTO namespace
+		(name, master_key)
+		VALUES 
+		("%s", "%s");
+	`
+
+	sqlStmt := fmt.Sprintf(sqlTemplate, n.Name, n.MasterKey)
+	_, err := conn.Exec(sqlStmt)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
 }

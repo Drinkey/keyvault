@@ -16,10 +16,8 @@ func main() {
 	{
 		v1.GET("/ping", controller.Ping)
 		// only list namespace of vault
-		// TODO:
 		v1.GET("/vault", namespace.List)
-		// TODO:
-		// v1.POST("/vault", namespace.Create)
+		v1.POST("/vault", namespace.Create)
 		// respond to URL like /vault/gitlab/?q=k8s_password
 		v1.GET("/vault/:namespace", secret.Query)
 		v1.POST("/vault/:namespace", secret.Create)
