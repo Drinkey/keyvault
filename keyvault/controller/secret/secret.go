@@ -13,6 +13,7 @@ import (
 func Query(c *gin.Context) {
 	namespace := c.Param("namespace")
 	key := c.Query("q")
+	log.Printf("Query secret [%s] under namespace %s", key, namespace)
 
 	var secret_model model.Secrets
 	secret := secret_model.Get(key, namespace)

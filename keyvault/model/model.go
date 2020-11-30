@@ -34,7 +34,7 @@ var conn *sql.DB
 
 func init() {
 	log.SetPrefix("model - ")
-	log.Println("initializing database")
+	log.Printf("initializing database: %s", DBPATH)
 
 	if DBPATH == "" {
 		log.Panic("Specify the DB Path in environment variable DB_PATH")
@@ -43,7 +43,7 @@ func init() {
 	initDbRequired := true
 
 	if internal.FileExist(DBPATH) {
-		log.Println("database file already exist")
+		log.Printf("database file %s already exist", DBPATH)
 		initDbRequired = false
 	}
 
