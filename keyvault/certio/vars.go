@@ -18,6 +18,7 @@ type SubjectConfig struct {
 	Locality     string `json:"locality"`
 	Address      string `json:"address"`
 	PostalCode   string `json:"postal_code"`
+	CommonName   string `json:"common_name"`
 }
 
 type CAConfig struct {
@@ -30,7 +31,7 @@ type CAConfig struct {
 type CertConfig struct {
 	SerialNumber int64         `json:"serial_number"`
 	Subject      SubjectConfig `json:"subject"`
-	IPv4Address  string        `json:"ip4addr"`
+	DNSName      string        `json:"dns_name"`
 	Valid        int           `json:"valid_year"`
 	KeyLength    int           `json:"key_length"`
 }

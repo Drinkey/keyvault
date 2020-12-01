@@ -47,7 +47,7 @@ func init() {
 			log.Fatal("creating certificate failed: ", err)
 		}
 	} else if !internal.FileExist(certs.ServerPrivKey) {
-		log.Print("Certificate is not exist, try to create new certificate")
+		log.Print("Certificate private key is not exist, try to create new certificate with new key")
 		if !internal.FileExist(certs.ServerCertConf) {
 			log.Panic("Unable to create new certificate because no configuration for certificate found")
 		}

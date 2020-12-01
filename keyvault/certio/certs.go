@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"log"
 	"math/big"
-	"net"
 	"os"
 
 	"github.com/Drinkey/keyvault/internal"
@@ -49,6 +48,7 @@ func getSubjectName(sc SubjectConfig) pkix.Name {
 		Locality:      []string{sc.Locality},
 		StreetAddress: []string{sc.Address},
 		PostalCode:    []string{sc.PostalCode},
+		CommonName:    sc.CommonName,
 	}
 }
 
@@ -115,7 +115,7 @@ func CreateCertificate(ca CertificateAuthority, f CertFiles) error {
 	cert := &x509.Certificate{
 		SerialNumber: big.NewInt(config.SerialNumber),
 		Subject:      getSubjectName(config.Subject),
-		IPAddresses:  []net.IP{net.ParseIP(config.IPv4Address), net.IPv6loopback},
+		DNSNames:     []string{config.DNSName, "localhost"},
 		NotBefore:    NotBefore,
 		NotAfter:     NotAfter,
 		SubjectKeyId: []byte{1, 2, 3, 4, 6},

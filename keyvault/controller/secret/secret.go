@@ -5,13 +5,23 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Drinkey/keyvault/certio"
 	"github.com/Drinkey/keyvault/internal"
 	"github.com/Drinkey/keyvault/model"
 	"github.com/gin-gonic/gin"
 )
 
 func Query(c *gin.Context) {
+
 	namespace := c.Param("namespace")
+	certOU, tlsEnabled := certio.ParseClientCertOU(c.Request)
+	if tlsEnabled && certOU != namespace {
+		log.Printf("OU=%s and Namespace=%s should be the same", certOU, namespace)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": fmt.Sprintf("Not a authorized client to access the namespace=%s", namespace),
+		})
+		return
+	}
 	key := c.Query("q")
 	log.Printf("Query secret [%s] under namespace %s", key, namespace)
 
@@ -34,6 +44,15 @@ func Query(c *gin.Context) {
 func Create(c *gin.Context) {
 
 	namespace := c.Param("namespace")
+	certOU, tlsEnabled := certio.ParseClientCertOU(c.Request)
+	// if
+	if tlsEnabled && certOU != namespace {
+		log.Printf("OU=%s and Namespace=%s should be the same", certOU, namespace)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": fmt.Sprintf("Not a authorized client to create new key under the namespace=%s", namespace),
+		})
+		return
+	}
 	log.Printf("Creating new secret under %s", namespace)
 
 	var secret_data model.Secrets

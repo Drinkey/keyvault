@@ -1,6 +1,9 @@
 package main
 
 import (
+	"net/http"
+
+	"github.com/Drinkey/keyvault/certio"
 	"github.com/Drinkey/keyvault/controller"
 	"github.com/Drinkey/keyvault/controller/namespace"
 	"github.com/Drinkey/keyvault/controller/secret"
@@ -15,8 +18,6 @@ func getRouter() *gin.Engine {
 }
 
 func main() {
-	// fmt.Println(certio.DoNothing())
-	// log.SetPrefix("main: ")
 	router := getRouter()
 	v1 := router.Group("/v1")
 	{
@@ -35,5 +36,14 @@ func main() {
 		// TODO:
 		v1.POST("/certs/sign", controller.SignCSR)
 	}
-	router.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+
+	tlsConfig, f := certio.BuildTLSConfig()
+
+	httpServer := &http.Server{
+		Addr:      ":443",
+		Handler:   router,
+		TLSConfig: tlsConfig,
+	}
+	httpServer.ListenAndServeTLS(f.ServerCert, f.ServerPrivKey)
+	// router.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
