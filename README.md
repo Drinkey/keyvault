@@ -153,3 +153,56 @@ Response 201
     "signed": "<valid_x509_content>"
 }
 ```
+
+## Test
+
+### Start the server
+
+```
+$ cd <the_path_of_project>
+$ export DB_PATH=/tmp/vault.db
+$ cd keyvault
+## Start keyvault server
+$ go run keyvault.go
+```
+### Prepare certificates
+
+**Server side**
+
+CA certificate and privatekey, keyvault service certificate and private key are automatically generated when starting the server.
+
+If you want to re-generate all certificates, just remove `keyvault/etc/ca.crt` and start the server again. You can use `keyvault/etc/ca.key` to sign client certificate request. The keyvault service will provide API to sign the request later.
+
+**Client side**
+
+Client need to generate private key manually. The following command will generate private key with RSA algorithm and key length is 4096.
+```
+$ openssl genrsa -out client.key 4096
+```
+
+Then client should create a CSR(Certificate Signing Request) file with OU specified, keyvault service will use OU to determine if client is authorized to access specific secret. For example, we set OU to `KUBERNETES`, and set other field to fit your need.
+```
+$ openssl req -new -nodes -key client.key -out client.csr -subj /C=CN/ST=SC/L=CD/O="KeyVault Client"/OU=KUBERNETES/CN=K8S.keyvault.org
+```
+
+Then use the CA key pairs to sign this request. (TODO: keyvault will provide API to do this, and this section should be updated)
+```
+$ openssl x509 -req -in client.csr -CA keyvault/etc/ca.crt  -CAkey keyvault/etc/ca_priv.key  -CAcreateserial -out client.crt
+```
+
+### Access API
+
+Create a new namespace. The namespace value must be exactly the same with OU in `client.crt`
+```
+curl -L --key certs/client.key --cert certs/client.crt --cacert certs/ca.crt https://keyvault.org/v1/vault/ -X POST -d '{"name": "KUBERNETES"}'
+```
+
+Create a new secret under the namespace
+```
+curl --key certs/client.key --cert certs/client.crt --cacert certs/ca.crt https://keyvault.org/v1/vault/KUBERNETES -X POST -d '{"key": "admin_user", "value": "some-password"}'
+```
+
+Get the secret
+```
+curl --key certs/client.key --cert certs/client.crt --cacert certs/ca.crt https://keyvault.org/v1/vault/KUBERNETES\?q\=admin_user
+```
