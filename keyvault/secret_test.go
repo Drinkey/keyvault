@@ -81,9 +81,7 @@ func TestGetSecretWithSpecificNamespaceAndKey(t *testing.T) {
 		t.Logf("actual status code: %d", w.Code)
 		t.Fail()
 	}
-	if !strings.Contains(w.Body.String(), "TEST_NS") ||
-		!strings.Contains(w.Body.String(), "TEST_SECRET") ||
-		!strings.Contains(w.Body.String(), "The_hiddenPassw0rd!") {
+	if !strings.Contains(w.Body.String(), "TEST_NS") {
 		t.Logf("actual body:\n%s\n", w.Body.String())
 		t.Fail()
 	}

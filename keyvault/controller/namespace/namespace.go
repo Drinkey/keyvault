@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Drinkey/keyvault/certio"
+	"github.com/Drinkey/keyvault/controller"
 	"github.com/Drinkey/keyvault/internal"
 	"github.com/Drinkey/keyvault/model"
 	"github.com/gin-gonic/gin"
@@ -25,15 +25,18 @@ func Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	certOU, tlsEnabled := certio.ParseClientCertOU(c.Request)
-	if tlsEnabled && certOU != ns_data.Name {
-		log.Printf("OU=%s and Namespace=%s should be the same", certOU, ns_data.Name)
+	if !controller.IsClientAuthorized(c.Request, ns_data.Name) {
+		msg := fmt.Sprintf(`Client not authorized to create namespace=%s.
+		Cert OU and Namespace must be the same`, ns_data.Name)
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": fmt.Sprintf("Not a authorized client to create namespace=%s. Cert OU and Namespace must be the same", ns_data.Name),
+			"error": msg,
 		})
 		return
 	}
+
 	ns_data.MasterKey = internal.GenerateMasterKey()
+	ns_data.Nonce = internal.EncodeByte(internal.GenerateNonce())
+
 	var ns_model model.Namespace
 	err := ns_model.Create(ns_data)
 	if err != nil {
@@ -42,5 +45,6 @@ func Create(c *gin.Context) {
 	}
 	newNs, err := ns_model.Get(ns_data.Name)
 	newNs.MasterKey = internal.KeyMask
+	newNs.Nonce = internal.KeyMask
 	c.JSON(http.StatusCreated, newNs)
 }

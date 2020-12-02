@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Drinkey/keyvault/certio"
+	"github.com/Drinkey/keyvault/controller"
 	"github.com/Drinkey/keyvault/internal"
 	"github.com/Drinkey/keyvault/model"
 	"github.com/gin-gonic/gin"
@@ -14,19 +14,21 @@ import (
 func Query(c *gin.Context) {
 
 	namespace := c.Param("namespace")
-	certOU, tlsEnabled := certio.ParseClientCertOU(c.Request)
-	if tlsEnabled && certOU != namespace {
-		log.Printf("OU=%s and Namespace=%s should be the same", certOU, namespace)
+
+	if !controller.IsClientAuthorized(c.Request, namespace) {
+		msg := fmt.Sprintf(`Client not authorized to access the namespace=%s`, namespace)
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": fmt.Sprintf("Not a authorized client to access the namespace=%s", namespace),
+			"error": msg,
 		})
 		return
 	}
+
 	key := c.Query("q")
 	log.Printf("Query secret [%s] under namespace %s", key, namespace)
 
 	var secret_model model.Secrets
 	secret := secret_model.Get(key, namespace)
+	fmt.Println(secret)
 
 	if secret.IsEmpty() {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -35,8 +37,19 @@ func Query(c *gin.Context) {
 		return
 	}
 
-	secret.Value = internal.Decrypt(secret.Value, secret.NameSpace.MasterKey)
+	cipherTextBytes, err := internal.DecodeString(secret.Value)
+	if err != nil {
+		log.Printf("failed to decode string %s", secret.Value)
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": fmt.Sprintf("failed to decode secret value string. NameSpace=%s, Key=%s", namespace, key),
+		})
+		return
+	}
+	nonceByte, err := internal.DecodeString(secret.NameSpace.Nonce)
+
+	secret.Value = internal.Decrypt(cipherTextBytes, secret.NameSpace.MasterKey, nonceByte)
 	secret.NameSpace.MasterKey = internal.KeyMask
+	secret.NameSpace.Nonce = internal.KeyMask
 
 	c.JSON(http.StatusOK, secret)
 }
@@ -44,15 +57,15 @@ func Query(c *gin.Context) {
 func Create(c *gin.Context) {
 
 	namespace := c.Param("namespace")
-	certOU, tlsEnabled := certio.ParseClientCertOU(c.Request)
-	// if
-	if tlsEnabled && certOU != namespace {
-		log.Printf("OU=%s and Namespace=%s should be the same", certOU, namespace)
+
+	if !controller.IsClientAuthorized(c.Request, namespace) {
+		msg := fmt.Sprintf("Client not authorized to create new key under the namespace=%s", namespace)
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": fmt.Sprintf("Not a authorized client to create new key under the namespace=%s", namespace),
+			"error": msg,
 		})
 		return
 	}
+
 	log.Printf("Creating new secret under %s", namespace)
 
 	var secret_data model.Secrets
@@ -74,9 +87,12 @@ func Create(c *gin.Context) {
 		})
 		return
 	}
+	fmt.Println(ns)
 	secret_data.NameSpace = ns
+	fmt.Printf("nonce: %s", ns.Nonce)
+	nonceByte, err := internal.DecodeString(ns.Nonce)
 	// 2. encrypt secret value with master key
-	secret_data.Value = internal.Encrypt(secret_data.Value, secret_data.NameSpace.MasterKey)
+	secret_data.Value = internal.EncodeByte(internal.Encrypt(secret_data.Value, ns.MasterKey, nonceByte))
 	fmt.Println(secret_data)
 	// 3. save to database
 	var secret_model model.Secrets

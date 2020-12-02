@@ -1,23 +1,68 @@
 package internal
 
-import "fmt"
+import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
+	"io"
+)
 
 const KeyMask = "******"
+
+func aesGcmCipher(key string) cipher.AEAD {
+	keyBytes := []byte(key)
+	block, err := aes.NewCipher(keyBytes)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+	return aesgcm
+}
 
 // TODO: implement the master key generation
 func GenerateMasterKey() string {
 	// keyLen := 24
-	return "xDeifu-fkeI19-vs313dR"
+	return "passphrasewhichneedstobe32bytes!"
 }
 
-// TODO: implement the encryption
-// encrypt the text using key. Encode with base64 and return
-func Encrypt(text string, key string) string {
-	return fmt.Sprintf("base64.Encode(Encrypt(%s, %s))", text, key)
+func GenerateNonce() []byte {
+	nonce := make([]byte, 12)
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		panic(err.Error())
+	}
+	return nonce
 }
 
-// TODO: implement the decryption
-// Decode with base64, decrypt the cipher using key and return the plain text
-func Decrypt(cipher string, key string) string {
-	return fmt.Sprintf("decrypt(base64.Decode(%s), %s)", cipher, key)
+func EncodeByte(b []byte) string {
+	return base64.StdEncoding.EncodeToString(b)
+}
+
+func DecodeString(s string) ([]byte, error) {
+	return base64.StdEncoding.DecodeString(s)
+}
+
+// encrypt the plaintext using key and nonce
+// Return encrypted in byte
+func Encrypt(plaintext string, key string, nonce []byte) []byte {
+	aesgcm := aesGcmCipher(key)
+	ciphertext := aesgcm.Seal(nil, nonce, []byte(plaintext), nil)
+	return ciphertext
+}
+
+// Decrypt the ciphertext in byte using key and nonce
+// Return the plain text
+func Decrypt(ciphertext []byte, key string, nonce []byte) string {
+	aesgcm := aesGcmCipher(key)
+	plaintext, err := aesgcm.Open(nil, nonce, []byte(ciphertext), nil)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return fmt.Sprintf("%s", plaintext)
 }
