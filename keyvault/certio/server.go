@@ -46,11 +46,13 @@ func BuildTLSConfig() (*tls.Config, CertFiles) {
 }
 
 func ParseClientCertOU(r *http.Request) (string, bool) {
-	mode := os.Getenv("KVMODE")
-	// not panic only when mode is TEST if connection is TLS.
+	kvMode := os.Getenv("KV_MODE")
+	ginMode := os.Getenv("GIN_MODE")
+	// not panic only when mode is TEST and gin in debug mode if connection is TLS.
 	// getting peer certificate will panic if connection is not TLS
-	if r.TLS == nil && mode == "TEST" {
+	if r.TLS == nil && kvMode == "TEST" && ginMode == "debug" {
 		// later "false" means TLS is not enabled
+		log.Printf("Allow non-TLS connection in TEST mode, gin is debug mode")
 		return "", false
 	}
 	// The peer certificate must be the first one
