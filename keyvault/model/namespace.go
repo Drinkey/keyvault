@@ -11,6 +11,7 @@ type Namespace struct {
 	ID        int    `json:"namespace_id"`
 	Name      string `json:"name"`
 	MasterKey string `json:"master_key"`
+	Nonce     string `json:"nonce"`
 }
 
 func (ns Namespace) IsEmpty() bool {
@@ -23,7 +24,7 @@ func (ns Namespace) IsNameExist(n string) bool {
 
 func (ns Namespace) Get(name string) (Namespace, error) {
 	sqlTemplate := `
-	SELECT namespace_id, name, master_key
+	SELECT namespace_id, name, master_key, nonce
 	FROM namespace
 	WHERE name="%s"
 	`
@@ -37,7 +38,7 @@ func (ns Namespace) Get(name string) (Namespace, error) {
 
 	var r Namespace
 	for rows.Next() {
-		err = rows.Scan(&r.ID, &r.Name, &r.MasterKey)
+		err = rows.Scan(&r.ID, &r.Name, &r.MasterKey, &r.Nonce)
 		if err != nil {
 			log.Println(err)
 			return ns, err
@@ -72,12 +73,12 @@ func (ns Namespace) List() []Namespace {
 func (ns Namespace) Create(n Namespace) error {
 	sqlTemplate := `
 		INSERT INTO namespace
-		(name, master_key)
-		VALUES 
-		("%s", "%s");
+		(name, master_key, nonce)
+		VALUES
+		("%s", "%s", "%s");
 	`
 
-	sqlStmt := fmt.Sprintf(sqlTemplate, n.Name, n.MasterKey)
+	sqlStmt := fmt.Sprintf(sqlTemplate, n.Name, n.MasterKey, n.Nonce)
 	_, err := conn.Exec(sqlStmt)
 	if err != nil {
 		log.Println(err)

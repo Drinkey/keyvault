@@ -26,7 +26,8 @@ func (s Secrets) Get(q string, ns string) Secrets {
 	s.value AS value,
 	s.namespace_id as namespace_id,
 	ns.name AS namespace,
-	ns.master_key as encryption_key
+	ns.master_key as encryption_key,
+	ns.nonce as nonce
 	FROM secrets AS s, namespace AS ns
 	WHERE s.namespace_id = ns.namespace_id
 	AND ns.name="%s"
@@ -40,7 +41,8 @@ func (s Secrets) Get(q string, ns string) Secrets {
 
 	var r Secrets
 	for rows.Next() {
-		err = rows.Scan(&r.ID, &r.Key, &r.Value, &r.NameSpace.ID, &r.NameSpace.Name, &r.NameSpace.MasterKey)
+		err = rows.Scan(&r.ID, &r.Key, &r.Value, &r.NameSpace.ID,
+			&r.NameSpace.Name, &r.NameSpace.MasterKey, &r.NameSpace.Nonce)
 		if err != nil {
 			log.Println(err)
 		}

@@ -24,6 +24,7 @@ CREATE TABLE namespace (
     namespace_id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
 	master_key TEXT,
+	nonce TEXT,
 	CONSTRAINT uniqueName UNIQUE(name)
     );
 `
