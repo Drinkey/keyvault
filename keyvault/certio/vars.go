@@ -3,12 +3,17 @@ package certio
 import (
 	"crypto/rsa"
 	"crypto/x509"
+	"os"
 )
 
-const CONF_DIR = "etc"
+var CONF_DIR = os.Getenv("CERT_CONF_DIR")
+
 const CA_CONF = "ca.json"
-const CA_FILE = "ca.crt"
 const CERT_CONF = "cert.json"
+
+var CERT_DIR = os.Getenv("CERT_DIR")
+
+const CA_FILE = "ca.crt"
 const CERT_FILE = "cert.pem"
 
 type SubjectConfig struct {
@@ -38,10 +43,13 @@ type CertConfig struct {
 
 // Store certificate related file path
 type CertFiles struct {
-	CaCert         string
-	CaPrivKey      string
-	ServerCert     string
-	ServerPrivKey  string
+	CaCert        string
+	CaPrivKey     string
+	ServerCert    string
+	ServerPrivKey string
+}
+
+type CertConfFiles struct {
 	CaCertConf     string
 	ServerCertConf string
 }

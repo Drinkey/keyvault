@@ -62,11 +62,11 @@ func SavePemFile(certype string, content []byte, filename string, perm os.FileMo
 	return ioutil.WriteFile(filename, PEM.Bytes(), 0600)
 }
 
-func InitCACertificate(f CertFiles) (CertificateAuthority, error) {
-	log.Printf("Creating CA Certificate %s with %s", f.CaCert, f.CaCertConf)
+func InitCACertificate(f CertFiles, c CertConfFiles) (CertificateAuthority, error) {
+	log.Printf("Creating CA Certificate %s with %s", f.CaCert, c.CaCertConf)
 
 	config := CAConfig{}
-	CaConfigParser(f.CaCertConf, &config)
+	CaConfigParser(c.CaCertConf, &config)
 	fmt.Println(config)
 
 	NotBefore, NotAfter := internal.TimeRange(config.Valid)
@@ -103,11 +103,11 @@ func InitCACertificate(f CertFiles) (CertificateAuthority, error) {
 	return CertificateAuthority{CaCert: ca, CaPrivKey: caPrivKey}, nil
 }
 
-func CreateCertificate(ca CertificateAuthority, f CertFiles) error {
-	log.Printf("Creating Server Certificate %s with %s", f.ServerCert, f.ServerCertConf)
+func CreateCertificate(ca CertificateAuthority, f CertFiles, c CertConfFiles) error {
+	log.Printf("Creating Server Certificate %s with %s", f.ServerCert, c.ServerCertConf)
 
 	config := CertConfig{}
-	CertConfigParser(f.ServerCertConf, &config)
+	CertConfigParser(c.ServerCertConf, &config)
 	fmt.Println(config)
 
 	NotBefore, NotAfter := internal.TimeRange(config.Valid)

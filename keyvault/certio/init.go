@@ -21,10 +21,15 @@ func CertConfigParser(filename string, schema *CertConfig) {
 
 func GetCertFiles(dir string) CertFiles {
 	return CertFiles{
-		CaCert:         fmt.Sprintf("%s/%s", dir, CA_FILE),
-		CaPrivKey:      fmt.Sprintf("%s/ca_priv.key", dir),
-		ServerCert:     fmt.Sprintf("%s/%s", dir, CERT_FILE),
-		ServerPrivKey:  fmt.Sprintf("%s/cert_priv.key", dir),
+		CaCert:        fmt.Sprintf("%s/%s", dir, CA_FILE),
+		CaPrivKey:     fmt.Sprintf("%s/ca_priv.key", dir),
+		ServerCert:    fmt.Sprintf("%s/%s", dir, CERT_FILE),
+		ServerPrivKey: fmt.Sprintf("%s/cert_priv.key", dir),
+	}
+}
+
+func GetCertConfFiles(dir string) CertConfFiles {
+	return CertConfFiles{
 		CaCertConf:     fmt.Sprintf("%s/%s", dir, CA_CONF),
 		ServerCertConf: fmt.Sprintf("%s/%s", dir, CERT_CONF),
 	}
@@ -33,29 +38,30 @@ func GetCertFiles(dir string) CertFiles {
 func init() {
 	log.SetPrefix("certio: ")
 	log.Print("init()")
-	certs := GetCertFiles(CONF_DIR)
+	certs_conf := GetCertConfFiles(CONF_DIR)
+	certs := GetCertFiles(CERT_DIR)
 	if !internal.FileExist(certs.CaCert) {
 		log.Print("CA Cert is not exist, try to create new CA")
-		if !internal.FileExist(certs.CaCertConf) {
+		if !internal.FileExist(certs_conf.CaCertConf) {
 			log.Panic("Unable to create new CA because no configuration for CA found")
 		}
-		ca, err := InitCACertificate(certs)
+		ca, err := InitCACertificate(certs, certs_conf)
 		if err != nil {
 			log.Fatal("creating CA failed: ", err)
 		}
-		if err := CreateCertificate(ca, certs); err != nil {
+		if err := CreateCertificate(ca, certs, certs_conf); err != nil {
 			log.Fatal("creating certificate failed: ", err)
 		}
 	} else if !internal.FileExist(certs.ServerPrivKey) {
 		log.Print("Certificate private key is not exist, try to create new certificate with new key")
-		if !internal.FileExist(certs.ServerCertConf) {
+		if !internal.FileExist(certs_conf.ServerCertConf) {
 			log.Panic("Unable to create new certificate because no configuration for certificate found")
 		}
 		ca, err := LoadCACertificate(certs)
 		if err != nil {
 			log.Fatal("CA cert exists but failed to load it. Please delete the CA cert and re-generate it")
 		}
-		if err := CreateCertificate(ca, certs); err != nil {
+		if err := CreateCertificate(ca, certs, certs_conf); err != nil {
 			log.Fatal("creating certificate failed: ", err)
 		}
 	}
