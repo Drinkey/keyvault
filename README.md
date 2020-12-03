@@ -17,7 +17,7 @@ Practice Project: key vault to store your secrets, provide RESTFul API, build wi
 
 The secret still visible as a plain text to authorized client. If the client choose to print it out or log it, there is nothing we can do. The sensitive data should never been seen anywhere.
 
-## Workflow
+# Workflow
 
 ### Storing a new secret
 - client initiate the request to store a new secret, a secret is a string
@@ -30,7 +30,7 @@ The secret still visible as a plain text to authorized client. If the client cho
 - decrypt the encrypted text with master key of the record
 - decode the decrypted text and return to client
 
-## Usage
+# Usage
 
 ### Namespace
 
@@ -154,9 +154,9 @@ Response 201
 }
 ```
 
-## Test
+# Test
 
-### Start the server
+## Start the server
 
 ```
 $ cd <the_path_of_project>
@@ -165,7 +165,7 @@ $ cd keyvault
 ## Start keyvault server
 $ go run keyvault.go
 ```
-### Prepare certificates
+## Prepare certificates
 
 **Server side**
 
@@ -190,7 +190,7 @@ Then use the CA key pairs to sign this request. (TODO: keyvault will provide API
 $ openssl x509 -req -in client.csr -CA keyvault/etc/ca.crt  -CAkey keyvault/etc/ca_priv.key  -CAcreateserial -out client.crt
 ```
 
-### Access API
+## Access API
 
 Create a new namespace. The namespace value must be exactly the same with OU in `client.crt`
 ```
@@ -206,3 +206,50 @@ Get the secret
 ```
 curl --key certs/client.key --cert certs/client.crt --cacert certs/ca.crt https://keyvault.org/v1/vault/KUBERNETES\?q\=admin_user
 ```
+
+# Development
+
+go 1.15.5
+
+## Build the Docker Image
+
+```
+$ git clone 
+$ cd keyvault
+$ docker build -t keyvault:latest .
+# or
+$ docker-compose build
+```
+## Start the service
+
+### First look
+
+Start the service and listen on local port 443 in foreground. Ctl+c will terminate the service, and remove the container.
+```
+docker run --rm -p 443:443 --name keyvault keyvault:latest
+```
+
+### Data persistance
+
+Persist certificate and database file.
+
+```
+$ export HOST_DATA_DIR=/some/where/on/host
+$ docker-compose up -d
+```
+
+## Build binary with Docker
+
+```
+$ docker run --rm \
+    -v "$PWD/keyvault":/usr/src/keyvault \
+    -w /usr/src/keyvault \
+    -e GOOS=linux \
+    -e GOARCH=amd64 \
+    -e CGO_ENABLED=1 \
+    keyvault:debug \
+    go build -v -o keyvault-linux-amd64
+```
+
+Note, build with `GOOS=darwin` and `CGO_ENABLED=1` will fail on my macOS.
+
