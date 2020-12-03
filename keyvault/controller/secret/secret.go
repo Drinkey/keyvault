@@ -27,8 +27,7 @@ func Query(c *gin.Context) {
 	log.Printf("Query secret [%s] under namespace %s", key, namespace)
 
 	var secret_model model.Secrets
-	secret := secret_model.Get(key, namespace)
-	fmt.Println(secret)
+	secret := secret_model.Get(internal.Sha256Sum(key), namespace)
 
 	if secret.IsEmpty() {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -87,13 +86,13 @@ func Create(c *gin.Context) {
 		})
 		return
 	}
-	fmt.Println(ns)
 	secret_data.NameSpace = ns
-	fmt.Printf("nonce: %s", ns.Nonce)
-	nonceByte, err := internal.DecodeString(ns.Nonce)
+
 	// 2. encrypt secret value with master key
+	nonceByte, err := internal.DecodeString(ns.Nonce)
 	secret_data.Value = internal.EncodeByte(internal.Encrypt(secret_data.Value, ns.MasterKey, nonceByte))
-	fmt.Println(secret_data)
+	secret_data.Key = internal.Sha256Sum(secret_data.Key)
+
 	// 3. save to database
 	var secret_model model.Secrets
 	err = secret_model.Create(secret_data)

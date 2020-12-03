@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -29,6 +30,11 @@ func aesGcmCipher(key string) cipher.AEAD {
 func GenerateMasterKey() string {
 	// keyLen := 24
 	return "passphrasewhichneedstobe32bytes!"
+}
+
+func Sha256Sum(input string) string {
+	shaSum := sha256.Sum256([]byte(input))
+	return fmt.Sprintf("%x", shaSum)
 }
 
 func GenerateNonce() []byte {
