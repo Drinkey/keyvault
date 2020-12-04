@@ -9,11 +9,11 @@ import (
 	"os"
 )
 
-func CreateTLSConfig(c CertFiles) (*tls.Config, error) {
+func CreateTLSConfig(c CertFilePath) (*tls.Config, error) {
 	// 1. load ca to cert pool
 	// 2. load cert and key
 	// 3. construct tls config
-	caPEM, err := ioutil.ReadFile(c.CaCert)
+	caPEM, err := ioutil.ReadFile(c.CaCertPath)
 	if err != nil {
 		log.Panic("load CA certificate failed, unable to recover")
 	}
@@ -23,7 +23,7 @@ func CreateTLSConfig(c CertFiles) (*tls.Config, error) {
 		log.Panic("append CA certificate to CertPool failed")
 	}
 
-	cert, err := tls.LoadX509KeyPair(c.ServerCert, c.ServerPrivKey)
+	cert, err := tls.LoadX509KeyPair(c.ServerCertPath, c.ServerPrivKeyPath)
 	if err != nil {
 		log.Panic("load server certificate failed")
 	}
@@ -35,14 +35,14 @@ func CreateTLSConfig(c CertFiles) (*tls.Config, error) {
 	}, nil
 }
 
-func BuildTLSConfig() (*tls.Config, CertFiles) {
-	f := GetCertFiles(CERT_DIR)
-	tlsConfig, err := CreateTLSConfig(f)
+func BuildTLSConfig() *tls.Config {
+	// f := GetCertFiles(CERT_DIR)
+	tlsConfig, err := CreateTLSConfig(CertFiles)
 	if err != nil {
 		log.Panic("create TLS server config failed")
 	}
 	tlsConfig.BuildNameToCertificate()
-	return tlsConfig, f
+	return tlsConfig
 }
 
 func ParseClientCertOU(r *http.Request) (string, bool) {
