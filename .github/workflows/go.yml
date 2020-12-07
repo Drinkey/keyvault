@@ -34,13 +34,14 @@ jobs:
 
     - name: Test
       env:
-        DB_PATH: ${PWD}/vault.db
+        DB_PATH: vault.db
         KV_MODE: TEST
         GIN_MODE: debug
-        CERT_CONF_FILE: ${PWD}/cert.json
-        CERT_DIR: ${PWD}
+        CERT_CONF_FILE: cert.json
+        CERT_DIR: certs
       run: |
         echo $DB_PATH $KV_MODE $GIN_MODE $CERT_CONF_FILE $CERT_DIR
         echo ${PWD}
+        mkdir certs
         ls -al
         go test -v ./...
