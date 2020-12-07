@@ -16,8 +16,8 @@ import (
 	"github.com/Drinkey/keyvault/internal"
 )
 
-func LoadCACertificate(certs CertFiles) (CertificateAuthority, error) {
-	ca_txt, err := ioutil.ReadFile(certs.CaCert)
+func LoadCACertificate(c CertFilePath) (CertificateAuthority, error) {
+	ca_txt, err := ioutil.ReadFile(c.CaCertPath)
 	if err != nil {
 		log.Fatal("read certificate file failed", err)
 	}
@@ -27,7 +27,7 @@ func LoadCACertificate(certs CertFiles) (CertificateAuthority, error) {
 		log.Fatal("parse certificate content failed", err)
 	}
 
-	ca_pkey_txt, err := ioutil.ReadFile(certs.CaPrivKey)
+	ca_pkey_txt, err := ioutil.ReadFile(c.CaPrivKeyPath)
 	if err != nil {
 		log.Fatal("read private key file failed", err)
 	}
@@ -37,10 +37,18 @@ func LoadCACertificate(certs CertFiles) (CertificateAuthority, error) {
 		log.Fatal("parse private key content failed", err)
 	}
 
-	return CertificateAuthority{CaCert: cacert, CaPrivKey: ca_pkey}, nil
+	return CertificateAuthority{CaCert: cacert, CaCertBytes: ca_block.Bytes, CaPrivKey: ca_pkey}, nil
 }
 
-func getSubjectName(sc SubjectConfig) pkix.Name {
+func Issue(c *x509.Certificate, ca CertificateAuthority, k interface{}) ([]byte, error) {
+	certBytes, err := x509.CreateCertificate(rand.Reader, c, ca.CaCert, k, ca.CaPrivKey)
+	if err != nil {
+		return []byte{}, err
+	}
+	return certBytes, nil
+}
+
+func getSubjectName(sc SubjectSchema) pkix.Name {
 	return pkix.Name{
 		Organization:  []string{sc.Organization},
 		Country:       []string{sc.Country},
@@ -62,18 +70,18 @@ func SavePemFile(certype string, content []byte, filename string, perm os.FileMo
 	return ioutil.WriteFile(filename, PEM.Bytes(), 0600)
 }
 
-func InitCACertificate(f CertFiles, c CertConfFiles) (CertificateAuthority, error) {
-	log.Printf("Creating CA Certificate %s with %s", f.CaCert, c.CaCertConf)
+func InitCACertificate(f CertFilePath, confFiles string) (CertificateAuthority, error) {
+	log.Printf("Creating CA Certificate %s with %s", f.CaCertPath, confFiles)
 
-	config := CAConfig{}
-	CaConfigParser(c.CaCertConf, &config)
+	config := CertConfigSchema{}
+	CertConfigParser(confFiles, &config)
 	fmt.Println(config)
 
-	NotBefore, NotAfter := internal.TimeRange(config.Valid)
+	NotBefore, NotAfter := internal.TimeRange(config.CA.Valid)
 
 	ca := &x509.Certificate{
-		SerialNumber:          big.NewInt(config.SerialNumber),
-		Subject:               getSubjectName(config.Subject),
+		SerialNumber:          big.NewInt(config.CA.SerialNumber),
+		Subject:               getSubjectName(config.CA.Subject),
 		NotBefore:             NotBefore,
 		NotAfter:              NotAfter,
 		IsCA:                  true,
@@ -82,11 +90,11 @@ func InitCACertificate(f CertFiles, c CertConfFiles) (CertificateAuthority, erro
 		BasicConstraintsValid: true,
 	}
 
-	caPrivKey, err := rsa.GenerateKey(rand.Reader, config.KeyLength)
+	caPrivKey, err := rsa.GenerateKey(rand.Reader, config.CA.KeyLength)
 	if err != nil {
 		return CertificateAuthority{}, err
 	}
-	err = SavePemFile("RSA PRIVATE KEY", x509.MarshalPKCS1PrivateKey(caPrivKey), f.CaPrivKey, 0600)
+	err = SavePemFile("RSA PRIVATE KEY", x509.MarshalPKCS1PrivateKey(caPrivKey), f.CaPrivKeyPath, 0600)
 	if err != nil {
 		return CertificateAuthority{}, err
 	}
@@ -95,7 +103,7 @@ func InitCACertificate(f CertFiles, c CertConfFiles) (CertificateAuthority, erro
 	if err != nil {
 		return CertificateAuthority{}, err
 	}
-	err = SavePemFile("CERTIFICATE", caBytes, f.CaCert, 0600)
+	err = SavePemFile("CERTIFICATE", caBytes, f.CaCertPath, 0600)
 	if err != nil {
 		return CertificateAuthority{}, err
 	}
@@ -103,30 +111,30 @@ func InitCACertificate(f CertFiles, c CertConfFiles) (CertificateAuthority, erro
 	return CertificateAuthority{CaCert: ca, CaPrivKey: caPrivKey}, nil
 }
 
-func CreateCertificate(ca CertificateAuthority, f CertFiles, c CertConfFiles) error {
-	log.Printf("Creating Server Certificate %s with %s", f.ServerCert, c.ServerCertConf)
+func CreateCertificate(ca CertificateAuthority, f CertFilePath, confFiles string) error {
+	log.Printf("Creating Server Certificate %s with %s", f.ServerCertPath, confFiles)
 
-	config := CertConfig{}
-	CertConfigParser(c.ServerCertConf, &config)
+	config := CertConfigSchema{}
+	CertConfigParser(confFiles, &config)
 	fmt.Println(config)
 
-	NotBefore, NotAfter := internal.TimeRange(config.Valid)
+	NotBefore, NotAfter := internal.TimeRange(config.Certificate.Valid)
 
 	cert := &x509.Certificate{
-		SerialNumber: big.NewInt(config.SerialNumber),
-		Subject:      getSubjectName(config.Subject),
-		DNSNames:     []string{config.DNSName, "localhost"},
+		SerialNumber: big.NewInt(config.Certificate.SerialNumber),
+		Subject:      getSubjectName(config.Certificate.Subject),
+		DNSNames:     []string{config.Certificate.DNSName, "localhost"},
 		NotBefore:    NotBefore,
 		NotAfter:     NotAfter,
 		SubjectKeyId: []byte{1, 2, 3, 4, 6},
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		KeyUsage:     x509.KeyUsageDigitalSignature,
 	}
-	certPrivKey, err := rsa.GenerateKey(rand.Reader, config.KeyLength)
+	certPrivKey, err := rsa.GenerateKey(rand.Reader, config.Certificate.KeyLength)
 	if err != nil {
 		return err
 	}
-	err = SavePemFile("RSA PRIVATE KEY", x509.MarshalPKCS1PrivateKey(certPrivKey), f.ServerPrivKey, 0600)
+	err = SavePemFile("RSA PRIVATE KEY", x509.MarshalPKCS1PrivateKey(certPrivKey), f.ServerPrivKeyPath, 0600)
 	if err != nil {
 		return err
 	}
@@ -135,7 +143,7 @@ func CreateCertificate(ca CertificateAuthority, f CertFiles, c CertConfFiles) er
 	if err != nil {
 		return err
 	}
-	err = SavePemFile("CERTIFICATE", certBytes, f.ServerCert, 0600)
+	err = SavePemFile("CERTIFICATE", certBytes, f.ServerCertPath, 0600)
 	if err != nil {
 		return err
 	}

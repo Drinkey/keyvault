@@ -12,13 +12,11 @@ services:
     networks:
       - host
     volumes: 
-      - ${HOST_DATA_DIR:-keyvault}/etc:/usr/local/keyvault/etc
-      - ${HOST_DATA_DIR:-keyvault}/certs:/usr/local/keyvault/certs
-      - ${HOST_DATA_DIR:-keyvault}/db:/usr/local/keyvault/db
+      - ${HOST_DATA_DIR:-keyvault}/:/usr/local/keyvault/
     environment: 
-      - CERT_CONF_DIR=/usr/local/keyvault/etc
+      - CERT_CONF_FILE=/usr/local/keyvault/cert.json
       - CERT_DIR=/usr/local/keyvault/certs
-      - DB_PATH=/usr/local/keyvault/db/vault.db
+      - DB_PATH=/usr/local/keyvault/vault.db
     deploy:
       replicas: 1
       restart_policy:

@@ -37,12 +37,12 @@ func main() {
 		v1.POST("/certs/sign", controller.SignCSR)
 	}
 
-	tlsConfig, f := certio.BuildTLSConfig()
+	tlsConfig := certio.BuildTLSConfig()
 
 	httpServer := &http.Server{
 		Addr:      ":443",
 		Handler:   router,
 		TLSConfig: tlsConfig,
 	}
-	httpServer.ListenAndServeTLS(f.ServerCert, f.ServerPrivKey)
+	httpServer.ListenAndServeTLS(certio.CertFiles.ServerCertPath, certio.CertFiles.ServerPrivKeyPath)
 }
