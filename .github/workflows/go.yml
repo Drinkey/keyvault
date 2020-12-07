@@ -34,3 +34,8 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+      env:
+        DB_PATH: $PWD/vault.db
+        KV_MODE: TEST
+        GIN_MODE: debug
+        CERT_CONF_FILE: $PWD/cert.json
