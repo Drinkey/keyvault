@@ -9,7 +9,7 @@ on:
 jobs:
 
   build:
-    name: Build
+    name: Build and Unittest
     runs-on: ubuntu-latest
     steps:
 
@@ -33,9 +33,14 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test -v ./...
       env:
         DB_PATH: $PWD/vault.db
         KV_MODE: TEST
         GIN_MODE: debug
         CERT_CONF_FILE: $PWD/cert.json
+        CERT_DIR: $PWD
+      run: |
+        echo $DB_PATH $KV_MODE $GIN_MODE $CERT_CONF_FILE $CERT_DIR
+        echo $PWD
+        ls -al
+        go test -v ./...
