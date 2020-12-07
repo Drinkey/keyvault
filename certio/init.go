@@ -27,7 +27,7 @@ func init() {
 	log.SetPrefix("certio: ")
 	log.Printf("initialize certificates under %s", CERT_DIR)
 	if !internal.FileExist(CertFiles.CaCertPath) {
-		log.Print("CA Cert is not exist, try to create new CA")
+		log.Printf("CA Cert is not exist, try to create new CA with config file %s", CERT_CONF_FILE)
 		if !internal.FileExist(CERT_CONF_FILE) {
 			log.Panic("Unable to create new CA because no configuration for CA was found")
 		}
