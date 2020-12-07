@@ -8,8 +8,8 @@ ENV GOPROXY="https://mirrors.aliyun.com/goproxy/"
 RUN go get -d -v ./...
 RUN go install -v ./...
 
-ENV CERT_CONF_DIR=/go/src/keyvault/etc
-ENV CERT_DIR=/go/src/keyvault/etc
-ENV DB_PATH=/go/src/keyvault/etc/vault.db
+ENV CERT_CONF_FILE=/go/src/keyvault/cert.json
+ENV CERT_DIR=/go/src/keyvault/certs
+ENV DB_PATH=/go/src/keyvault/vault.db
 
 CMD ["keyvault"]
