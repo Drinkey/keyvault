@@ -12,7 +12,8 @@ import (
 const TESTDB = "/tmp/vault_test.db"
 const TESTDB_BASELINE = "/tmp/vault_test_baseline.db"
 
-var err = os.Setenv("KV_MODE", "TEST")
+var setEnvModeErr = os.Setenv("KV_MODE", "TEST")
+var setEnvGinErr = os.Setenv("GIN_MODE", "debug")
 
 // Copy the src file to dst. Any existing file will be overwritten and will not
 // copy file attributes.

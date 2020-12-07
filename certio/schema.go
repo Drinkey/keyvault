@@ -1,7 +1,7 @@
 package certio
 
 type SubjectSchema struct {
-	Organization string `json: "organization"`
+	Organization string `json:"organization"`
 	Country      string `json:"country"`
 	Province     string `json:"province"`
 	Locality     string `json:"locality"`
@@ -35,6 +35,6 @@ type CertificateSigningRequest struct {
 }
 
 type CertificateResponse struct {
-	Certificate string `json:"certificate"`
+	Certificate string `json:"signed"`
 	CA          string `json:"ca"`
 }

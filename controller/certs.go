@@ -47,21 +47,22 @@ func SignCSR(c *gin.Context) {
 	if err != nil {
 		e := fmt.Sprintf("Failed to parse Certificate Request in CSR: %s", err.Error())
 		log.Printf(e)
-		c.JSON(http.StatusCreated, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"error": e,
 		})
 		return
 	}
-	log.Println(csr)
 
 	if err = csr.CheckSignature(); err != nil {
 		e := fmt.Sprintf("check csr signature failed: %s", err.Error())
 		log.Printf(e)
-		c.JSON(http.StatusCreated, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"error": e,
 		})
 		return
 	}
+	log.Printf("check CSR signature passed")
+
 	certTemplate := createCertificateTemplate(csr)
 
 	ca, err := certio.LoadCACertificate(certio.CertFiles)
@@ -70,13 +71,31 @@ func SignCSR(c *gin.Context) {
 	}
 
 	certBytes, err := certio.Issue(certTemplate, ca, csr.PublicKey)
+	if err != nil {
+		e := fmt.Sprintf("Failed to issue certificate: %s", err.Error())
+		log.Printf(e)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": e,
+		})
+		return
+	}
+	log.Print("Certificate issued, creating response")
+
 	certPEM := new(bytes.Buffer)
 	pem.Encode(certPEM, &pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
 	})
+
+	caPEM := new(bytes.Buffer)
+	pem.Encode(caPEM, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: ca.CaCertBytes,
+	})
+
 	var response certio.CertificateResponse
 	response.Certificate = certPEM.String()
+	response.CA = caPEM.String()
 
 	c.JSON(http.StatusCreated, response)
 }

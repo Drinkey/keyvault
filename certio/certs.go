@@ -37,11 +37,11 @@ func LoadCACertificate(c CertFilePath) (CertificateAuthority, error) {
 		log.Fatal("parse private key content failed", err)
 	}
 
-	return CertificateAuthority{CaCert: cacert, CaPrivKey: ca_pkey}, nil
+	return CertificateAuthority{CaCert: cacert, CaCertBytes: ca_block.Bytes, CaPrivKey: ca_pkey}, nil
 }
 
 func Issue(c *x509.Certificate, ca CertificateAuthority, k interface{}) ([]byte, error) {
-	certBytes, err := x509.CreateCertificate(rand.Reader, c, ca.CaCert, &k, ca.CaPrivKey)
+	certBytes, err := x509.CreateCertificate(rand.Reader, c, ca.CaCert, k, ca.CaPrivKey)
 	if err != nil {
 		return []byte{}, err
 	}

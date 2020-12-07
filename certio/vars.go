@@ -23,6 +23,7 @@ type CertFilePath struct {
 
 // store CA cert and CA private key
 type CertificateAuthority struct {
-	CaCert    *x509.Certificate
-	CaPrivKey *rsa.PrivateKey
+	CaCert      *x509.Certificate
+	CaCertBytes []byte
+	CaPrivKey   *rsa.PrivateKey
 }
