@@ -13,7 +13,7 @@ func TestCryptEncryptionProcess(t *testing.T) {
 			expectEncrypted := "E7sm0JlmEVPFvfwuiFjXIYmjNnbz71DoVpxKoOpNZQ=="
 			nonceHex := "3660f5f97eb4180a767731ab"
 			text := "试一下中文"
-			key := "passphrasewhichneedstobe32bytes!"
+			key := []byte("passphrasewhichneedstobe32bytes!")
 			Convey("When decode nonce hex to byte", func() {
 				nonce, err := hex.DecodeString(nonceHex)
 				Convey("The decoding should have no error", func() {
@@ -39,7 +39,7 @@ func TestCryptDecryptionProcess(t *testing.T) {
 		Convey("Given nonce hex string, base64 encoded cipher text and key", func() {
 			nonceHex := "3660f5f97eb4180a767731ab"
 			b64CipherText := "E7sm0JlmEVPFvfwuiFjXIYmjNnbz71DoVpxKoOpNZQ=="
-			key := "passphrasewhichneedstobe32bytes!"
+			key := []byte("passphrasewhichneedstobe32bytes!")
 			text := "试一下中文"
 			Convey("When decode nonce hex string", func() {
 				nonce, err := hex.DecodeString(nonceHex)

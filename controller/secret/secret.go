@@ -45,8 +45,9 @@ func Query(c *gin.Context) {
 		return
 	}
 	nonceByte, err := internal.DecodeString(secret.NameSpace.Nonce)
+	masterKeyByte, err := internal.DecodeString(secret.NameSpace.MasterKey)
 
-	secret.Value = internal.Decrypt(cipherTextBytes, secret.NameSpace.MasterKey, nonceByte)
+	secret.Value = internal.Decrypt(cipherTextBytes, masterKeyByte, nonceByte)
 	secret.NameSpace.MasterKey = internal.KeyMask
 	secret.NameSpace.Nonce = internal.KeyMask
 
@@ -90,7 +91,11 @@ func Create(c *gin.Context) {
 
 	// 2. encrypt secret value with master key
 	nonceByte, err := internal.DecodeString(ns.Nonce)
-	secret_data.Value = internal.EncodeByte(internal.Encrypt(secret_data.Value, ns.MasterKey, nonceByte))
+	masterKeyByte, err := internal.DecodeString(ns.MasterKey)
+
+	secret_data.Value = internal.EncodeByte(
+		internal.Encrypt(secret_data.Value, masterKeyByte, nonceByte),
+	)
 	secret_data.Key = internal.Sha256Sum(secret_data.Key)
 
 	// 3. save to database

@@ -34,7 +34,7 @@ func Create(c *gin.Context) {
 		return
 	}
 
-	ns_data.MasterKey = internal.GenerateMasterKey()
+	ns_data.MasterKey = internal.EncodeByte(internal.GenerateMasterKey())
 	ns_data.Nonce = internal.EncodeByte(internal.GenerateNonce())
 
 	var ns_model model.Namespace

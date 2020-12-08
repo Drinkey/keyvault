@@ -12,9 +12,9 @@ import (
 
 const KeyMask = "******"
 
-func aesGcmCipher(key string) cipher.AEAD {
-	keyBytes := []byte(key)
-	block, err := aes.NewCipher(keyBytes)
+func aesGcmCipher(key []byte) cipher.AEAD {
+	// keyBytes := []byte(key)
+	block, err := aes.NewCipher(key)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -27,9 +27,13 @@ func aesGcmCipher(key string) cipher.AEAD {
 }
 
 // TODO: implement the master key generation
-func GenerateMasterKey() string {
-	// keyLen := 24
-	return "passphrasewhichneedstobe32bytes!"
+func GenerateMasterKey() []byte {
+	keyLen := 32
+	masterKey := make([]byte, keyLen)
+	if _, err := io.ReadFull(rand.Reader, masterKey); err != nil {
+		panic(err.Error())
+	}
+	return masterKey
 }
 
 func Sha256Sum(input string) string {
@@ -55,7 +59,7 @@ func DecodeString(s string) ([]byte, error) {
 
 // encrypt the plaintext using key and nonce
 // Return encrypted in byte
-func Encrypt(plaintext string, key string, nonce []byte) []byte {
+func Encrypt(plaintext string, key []byte, nonce []byte) []byte {
 	aesgcm := aesGcmCipher(key)
 	ciphertext := aesgcm.Seal(nil, nonce, []byte(plaintext), nil)
 	return ciphertext
@@ -63,7 +67,7 @@ func Encrypt(plaintext string, key string, nonce []byte) []byte {
 
 // Decrypt the ciphertext in byte using key and nonce
 // Return the plain text
-func Decrypt(ciphertext []byte, key string, nonce []byte) string {
+func Decrypt(ciphertext []byte, key []byte, nonce []byte) string {
 	aesgcm := aesGcmCipher(key)
 	plaintext, err := aesgcm.Open(nil, nonce, []byte(ciphertext), nil)
 	if err != nil {
