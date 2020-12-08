@@ -1,4 +1,7 @@
 # keyvault
+
+![Go](https://github.com/Drinkey/keyvault/workflows/Go/badge.svg?branch=main)
+
 Practice Project: key vault to store your secrets, provide RESTFul API, build with Gin
 
 > Just a practice project, it works in internal network. It's not a production-ready application.
