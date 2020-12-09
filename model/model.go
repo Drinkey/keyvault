@@ -29,6 +29,17 @@ CREATE TABLE namespace (
     );
 `
 
+const CERT_DB_SCHEMA = `
+CREATE TABLE certificate (
+	id INTEGER PRIMARY KEY,
+	name TEXT NOT NULL,
+	namespace_id INTEGER NOT NULL,
+	csr TEXT,
+	cert TEXT,
+	token TEXT NOT NULL,
+)
+`
+
 var DBPATH string = os.Getenv("DB_PATH")
 
 var conn *sql.DB
@@ -60,17 +71,17 @@ func init() {
 
 	if initDbRequired {
 		log.Println("first install, initializing database schema")
-		_, err = conn.Exec(NS_DB_SCHEMA)
-		if err != nil {
-			log.Fatalf("db %q: %s\n", err, NS_DB_SCHEMA)
+		tables := map[string]string{
+			"namespace":   NS_DB_SCHEMA,
+			"certificate": CERT_DB_SCHEMA,
+			"secrets":     SECRET_DB_SCHEMA,
 		}
-		log.Printf("Table namespace created")
-
-		_, err = conn.Exec(SECRET_DB_SCHEMA)
-		if err != nil {
-			log.Fatalf("db %q: %s\n", err, SECRET_DB_SCHEMA)
+		for table, sql := range tables {
+			_, err = conn.Exec(sql)
+			if err != nil {
+				log.Fatalf("Create table [%s] failed: %q: %s\n", table, err, sql)
+			}
+			log.Printf("Create table %s successful", table)
 		}
-		log.Printf("Table secret created")
 	}
-
 }
