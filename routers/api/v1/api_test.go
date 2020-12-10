@@ -1,18 +1,20 @@
-package main
+package v1
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/Drinkey/keyvault/controller"
+	"github.com/gin-gonic/gin"
 )
 
 func TestPingResponse(t *testing.T) {
-	r, w := setup()
-	defer teardown()
-	r.GET("/v1/ping", controller.Ping)
-	req, _ := http.NewRequest("GET", "/v1/ping", nil)
+	r := gin.Default()
+	w := httptest.NewRecorder()
+	r.GET("/api/v1/ping", controller.Ping)
+	req, _ := http.NewRequest("GET", "/api/v1/ping", nil)
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
 		t.Fail()
