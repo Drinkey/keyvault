@@ -11,11 +11,42 @@ import (
 
 	"github.com/Drinkey/keyvault/certio"
 	"github.com/Drinkey/keyvault/internal"
+	"github.com/Drinkey/keyvault/models"
 	"github.com/gin-gonic/gin"
 )
 
-func CreateCertificate(c *gin.Context) {
+type Certificate struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	SignRequest string `json:"req"`
+	Certificate string `json:"certificate"`
+	Token       string `json:"token"`
+}
 
+func CreateCertificateRequest(c *gin.Context) {
+	var req Certificate
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err := models.CreateCertificateRequest(
+		req.Name,
+		req.SignRequest,
+		internal.EncodeByte(internal.GenerateRandomKey(20)),
+	)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	newCert, err := models.GetCertificate(req.Name)
+	log.Print("got from db:")
+	log.Println(newCert)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	newCert.SignRequest = internal.KeyMask
+	c.JSON(http.StatusCreated, newCert)
 }
 
 func createCertificateTemplate(csr *x509.CertificateRequest) *x509.Certificate {

@@ -1,11 +1,11 @@
 package models
 
 type Certificate struct {
-	ID          uint   `gorm:"primaryKey;autoIncrement"`
-	Name        string `gorm:"unique;not null"`
-	SignRequest string `gorm:"not null"`
-	Certificate string
-	Token       string `gorm:"unique;not null"`
+	ID          uint   `json:"id" gorm:"primaryKey;autoIncrement"`
+	Name        string `json:"name" gorm:"unique;not null"`
+	SignRequest string `json:"req" gorm:"not null"`
+	Certificate string `json:"certificate"`
+	Token       string `json:"token" gorm:"unique;not null"`
 }
 
 func CreateCertificateRequest(name, req, token string) (err error) {

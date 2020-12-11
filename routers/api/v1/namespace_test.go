@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Drinkey/keyvault/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,7 +22,8 @@ func TestNamespaceCreateSuccess(t *testing.T) {
 	})
 	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJson))
 	r.ServeHTTP(w, req)
-	var respNamespace models.Namespace
+
+	var respNamespace Namespace
 	t.Log(w.Body.String())
 	json.Unmarshal(w.Body.Bytes(), &respNamespace)
 
@@ -81,7 +81,7 @@ func TestNamespaceCreateDuplicatedShouldFail(t *testing.T) {
 	})
 	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJson))
 	r.ServeHTTP(w, req)
-	var respNamespace models.Namespace
+	var respNamespace Namespace
 	t.Log(w.Body.String())
 	json.Unmarshal(w.Body.Bytes(), &respNamespace)
 

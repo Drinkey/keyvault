@@ -30,7 +30,7 @@ func InitRouter() *gin.Engine {
 
 		// Certificate need extra works, auth or token
 		// TODO: we may need this API exposed in HTTP, not HTTPS
-		// v1.POST("/cert/req", v1.CreateCertificateRequest)
+		apiv1.POST("/cert/req", v1.CreateCertificateRequest)
 		// v1.GET("/cert/ca", v1.GetCACertificate)
 		// TODO: OU should be unique
 		// v1.GET("/cert/", v1.GetCertificate)

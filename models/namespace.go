@@ -7,12 +7,6 @@ type Namespace struct {
 	Nonce     string
 }
 
-// type Namespace struct {
-// 	ID        int    `json:"namespace_id"`
-// 	Name      string `json:"name"`
-// 	MasterKey string `json:"master_key"`
-// 	Nonce     string `json:"nonce"`
-// }
 func CreateNamespace(name, key, nonce string) (err error) {
 	err = db.Create(&Namespace{
 		Name:      name,
