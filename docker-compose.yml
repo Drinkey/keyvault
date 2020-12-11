@@ -14,9 +14,10 @@ services:
     volumes: 
       - ${HOST_DATA_DIR:-keyvault}/:/usr/local/keyvault/
     environment: 
-      - CERT_CONF_FILE=/usr/local/keyvault/cert.json
-      - CERT_DIR=/usr/local/keyvault/certs
-      - DB_PATH=/usr/local/keyvault/vault.db
+      - KV_CERT_DIR=/usr/local/keyvault/
+      - KV_DB_PATH=/usr/local/keyvault/vault.db
+      - GIN_MODE=release
+      - KV_MODE=production
     deploy:
       replicas: 1
       restart_policy:
