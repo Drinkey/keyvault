@@ -1,4 +1,4 @@
-package controller
+package v1
 
 import (
 	"bytes"
@@ -11,8 +11,43 @@ import (
 
 	"github.com/Drinkey/keyvault/certio"
 	"github.com/Drinkey/keyvault/internal"
+	"github.com/Drinkey/keyvault/models"
 	"github.com/gin-gonic/gin"
 )
+
+type Certificate struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	SignRequest string `json:"req"`
+	Certificate string `json:"certificate"`
+	Token       string `json:"token"`
+}
+
+func CreateCertificateRequest(c *gin.Context) {
+	var req Certificate
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err := models.CreateCertificateRequest(
+		req.Name,
+		req.SignRequest,
+		internal.EncodeByte(internal.GenerateRandomKey(20)),
+	)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	newCert, err := models.GetCertificate(req.Name)
+	log.Print("got from db:")
+	log.Println(newCert)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	newCert.SignRequest = internal.KeyMask
+	c.JSON(http.StatusCreated, newCert)
+}
 
 func createCertificateTemplate(csr *x509.CertificateRequest) *x509.Certificate {
 	NotBefore, NotAfter := internal.TimeRange(5)
@@ -30,7 +65,7 @@ func createCertificateTemplate(csr *x509.CertificateRequest) *x509.Certificate {
 	}
 }
 
-func SignCSR(c *gin.Context) {
+func IssueCertificate(c *gin.Context) {
 	// 1. Parse CSR
 	// 2. Load CA
 	// 3. Sign the CSR
@@ -65,7 +100,7 @@ func SignCSR(c *gin.Context) {
 
 	certTemplate := createCertificateTemplate(csr)
 
-	ca, err := certio.LoadCACertificate(certio.CertFiles)
+	ca, err := certio.LoadCACertificate(certio.GetCertFiles())
 	if err != nil {
 		log.Fatal("CA cert exists but failed to load it. Please delete the CA cert and re-generate it")
 	}
@@ -98,4 +133,8 @@ func SignCSR(c *gin.Context) {
 	response.CA = caPEM.String()
 
 	c.JSON(http.StatusCreated, response)
+}
+
+func GetCertificate(c *gin.Context) {
+
 }

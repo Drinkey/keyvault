@@ -35,9 +35,8 @@ func CreateTLSConfig(c CertFilePath) (*tls.Config, error) {
 	}, nil
 }
 
-func BuildTLSConfig() *tls.Config {
-	// f := GetCertFiles(CERT_DIR)
-	tlsConfig, err := CreateTLSConfig(CertFiles)
+func BuildTLSConfig(certs CertFilePath) *tls.Config {
+	tlsConfig, err := CreateTLSConfig(certs)
 	if err != nil {
 		log.Panic("create TLS server config failed")
 	}

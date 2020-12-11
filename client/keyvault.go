@@ -11,14 +11,34 @@ import (
 
 var (
 	url      = flag.String("url", "someUrl", "the URL to get")
-	certFile = flag.String("cert", "someCertFile", "A PEM eoncoded certificate file.")
-	keyFile  = flag.String("key", "someKeyFile", "A PEM encoded private key file.")
-	caFile   = flag.String("CA", "someCertCAFile", "A PEM eoncoded CA's certificate file.")
+	method   = flag.String("method", "GET", "Specify the HTTP Method")
+	certFile = flag.String("cert", "client.crt", "A PEM eoncoded certificate file.")
+	keyFile  = flag.String("key", "client.pkey", "A PEM encoded private key file.")
+	caFile   = flag.String("CA", "ca.crt", "A PEM eoncoded CA's certificate file.")
 )
 
-func main() {
-	flag.Parse()
+// func certificateInit(){
+// 	parse config
+// 	if cert file exist:
+// 		return
+// 	else
+// 		create pkey
 
+// 	if pkey file exist:
+// 		create new cert
+// 		return
+// }
+
+// func createNewCertificate(){
+// 	parse cert config
+// 	set OU same as namespace
+// 	create csr PEM
+// 	parse csr PEM and replace \n with \\n (convert the file in one line)
+// 	post to service
+// 	get the signed cert and save to [namespace].crt
+// }
+
+func createHTTPSClient() *http.Client {
 	// Load client cert
 	cert, err := tls.LoadX509KeyPair(*certFile, *keyFile)
 	if err != nil {
@@ -40,7 +60,13 @@ func main() {
 	}
 	tlsConfig.BuildNameToCertificate()
 	transport := &http.Transport{TLSClientConfig: tlsConfig}
-	client := &http.Client{Transport: transport}
+	return &http.Client{Transport: transport}
+}
+
+func main() {
+	flag.Parse()
+
+	client := createHTTPSClient()
 
 	// Do GET something
 	resp, err := client.Get(*url)
