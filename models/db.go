@@ -10,12 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
-var DBPATH string = os.Getenv("DB_PATH")
+func getDbPath() string {
+	return os.Getenv("KV_DB_PATH")
+}
 
 var db *gorm.DB
 
 func init() {
 	log.SetPrefix("model - ")
+	DBPATH := getDbPath()
 
 	dsn := DBPATH
 

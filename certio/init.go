@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/Drinkey/keyvault/internal"
 )
@@ -14,7 +15,19 @@ func CertConfigParser(filename string, schema *CertConfigSchema) {
 	_ = json.Unmarshal([]byte(file), &schema)
 }
 
-func GetCertFiles(dir string) CertFilePath {
+func getKvCertDir() string {
+	log.Print("reading env cert dir")
+	return os.Getenv("KV_CERT_DIR")
+}
+
+func getKvCertConfig() string {
+	log.Print("reading env cert config")
+	return os.Getenv("KV_CERT_CONF")
+}
+
+func GetCertFiles() CertFilePath {
+	var dir = getKvCertDir()
+	log.Printf("got cert dir %s", dir)
 	return CertFilePath{
 		CaCertPath:        fmt.Sprintf("%s/%s", dir, CA_FILE),
 		CaPrivKeyPath:     fmt.Sprintf("%s/ca_priv.key", dir),
@@ -25,6 +38,11 @@ func GetCertFiles(dir string) CertFilePath {
 
 func init() {
 	log.SetPrefix("certio: ")
+	var CERT_CONF_FILE = getKvCertConfig()
+	log.Printf("got cert config path %s", CERT_CONF_FILE)
+	var CERT_DIR = getKvCertDir()
+	var CertFiles = GetCertFiles()
+
 	log.Printf("initialize certificates under %s", CERT_DIR)
 	if !internal.FileExist(CertFiles.CaCertPath) {
 		log.Printf("CA Cert is not exist, try to create new CA with config file %s", CERT_CONF_FILE)

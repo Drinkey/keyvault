@@ -18,12 +18,14 @@ func getRouter() *gin.Engine {
 func main() {
 	r := routers.InitRouter()
 
-	tlsConfig := certio.BuildTLSConfig()
+	certs := certio.GetCertFiles()
+
+	tlsConfig := certio.BuildTLSConfig(certs)
 
 	httpServer := &http.Server{
 		Addr:      ":443",
 		Handler:   r,
 		TLSConfig: tlsConfig,
 	}
-	httpServer.ListenAndServeTLS(certio.CertFiles.ServerCertPath, certio.CertFiles.ServerPrivKeyPath)
+	httpServer.ListenAndServeTLS(certs.ServerCertPath, certs.ServerPrivKeyPath)
 }

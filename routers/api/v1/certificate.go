@@ -100,7 +100,7 @@ func IssueCertificate(c *gin.Context) {
 
 	certTemplate := createCertificateTemplate(csr)
 
-	ca, err := certio.LoadCACertificate(certio.CertFiles)
+	ca, err := certio.LoadCACertificate(certio.GetCertFiles())
 	if err != nil {
 		log.Fatal("CA cert exists but failed to load it. Please delete the CA cert and re-generate it")
 	}
