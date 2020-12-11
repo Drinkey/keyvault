@@ -76,7 +76,7 @@ func TestSecretGetWithSpecificNamespaceAndKey(t *testing.T) {
 	}
 
 	// 3. Query the secret with specific key
-	r.GET(fmt.Sprintf("%s/:namespace", uri), GetSecrets)
+	r.GET(fmt.Sprintf("%s/:namespace", uri), GetSecret)
 
 	req, _ = http.NewRequest("GET", fmt.Sprintf("%s/TEST_NS_2?q=TEST_SECRET_2", uri), nil)
 	w = httptest.NewRecorder()

@@ -26,14 +26,16 @@ func aesGcmCipher(key []byte) cipher.AEAD {
 	return aesgcm
 }
 
-// TODO: implement the master key generation
-func GenerateMasterKey() []byte {
-	keyLen := 32
-	masterKey := make([]byte, keyLen)
-	if _, err := io.ReadFull(rand.Reader, masterKey); err != nil {
+func GenerateRandomKey(l int) (k []byte) {
+	k = make([]byte, l)
+	if _, err := io.ReadFull(rand.Reader, k); err != nil {
 		panic(err.Error())
 	}
-	return masterKey
+	return
+}
+
+func GenerateMasterKey() []byte {
+	return GenerateRandomKey(32)
 }
 
 func Sha256Sum(input string) string {
@@ -42,11 +44,7 @@ func Sha256Sum(input string) string {
 }
 
 func GenerateNonce() []byte {
-	nonce := make([]byte, 12)
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		panic(err.Error())
-	}
-	return nonce
+	return GenerateRandomKey(12)
 }
 
 func EncodeByte(b []byte) string {

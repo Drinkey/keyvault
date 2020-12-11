@@ -6,14 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Drinkey/keyvault/controller"
 	"github.com/gin-gonic/gin"
 )
 
 func TestPingResponse(t *testing.T) {
 	r := gin.Default()
 	w := httptest.NewRecorder()
-	r.GET("/api/v1/ping", controller.Ping)
+	r.GET("/api/v1/ping", Ping)
 	req, _ := http.NewRequest("GET", "/api/v1/ping", nil)
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {

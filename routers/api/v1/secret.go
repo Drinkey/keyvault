@@ -18,7 +18,7 @@ type Secret struct {
 	Namespace   Namespace `json:"namespace"`
 }
 
-func GetSecrets(c *gin.Context) {
+func GetSecret(c *gin.Context) {
 
 	namespace := c.Param("namespace")
 
