@@ -8,6 +8,10 @@ type Certificate struct {
 	Token       string `json:"token" gorm:"unique;not null"`
 }
 
+func (c Certificate) IsEmpty() bool {
+	return c.ID == 0
+}
+
 func CreateCertificateRequest(name, req, token string) (err error) {
 	err = db.Create(&Certificate{
 		Name:        name,

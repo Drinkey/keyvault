@@ -136,5 +136,21 @@ func IssueCertificate(c *gin.Context) {
 }
 
 func GetCertificate(c *gin.Context) {
-
+	q := c.Query("q")
+	cert, err := models.GetCertificate(q)
+	if err != nil {
+		log.Printf("get certificate %s error", q)
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": fmt.Sprintf("et certificate error: %s", err.Error()),
+		})
+		return
+	}
+	if cert.IsEmpty() {
+		log.Printf("failed to get certificate %s, 0 result found", q)
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": fmt.Sprintf("failed to get certificate %s, 0 result found", q),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, cert)
 }

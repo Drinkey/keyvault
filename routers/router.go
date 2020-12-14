@@ -31,11 +31,13 @@ func InitRouter() *gin.Engine {
 		// Certificate need extra works, auth or token
 		// TODO: we may need this API exposed in HTTP, not HTTPS
 		apiv1.POST("/cert/req", v1.CreateCertificateRequest)
-		// v1.GET("/cert/ca", v1.GetCACertificate)
-		// TODO: OU should be unique
-		// v1.GET("/cert/", v1.GetCertificate)
+		// TODO: read CA cert directly from a file
+		// apiv1.GET("/cert/ca", v1.GetCACertificate)
+		// TODO: OU(name in certificate table) should be unique
+		// respond to URL like /cert/?q=k8s_password
+		apiv1.GET("/cert/", v1.GetCertificate)
 		// TODO: only limited user should be able to access this API, how
-		// v1.POST("/cert/issue", v1.CreateCertificateRequest)
+		// apiv1.POST("/cert/issue", v1.CreateCertificateRequest)
 
 	}
 	return r
