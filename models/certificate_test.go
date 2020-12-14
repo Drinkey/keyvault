@@ -30,3 +30,23 @@ func TestCertificateGet(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestCertificateUpdateSignedCertificateByName(t *testing.T) {
+	certStr := "---some-request---xxxfffwww"
+	token := "some_token__rand2"
+	err := CreateCertificateRequest("DB_USER_3", certStr, token)
+	if err != nil {
+		t.Log("fail to create certificate record.")
+		t.Fail()
+	}
+	signedCertPem := "Some_Signed_Cert_PEM"
+	u, err := UpdateSignedCertificateByName("DB_USER_3", signedCertPem)
+	if err != nil {
+		t.Log("fail to update certificate record.")
+		t.Fail()
+	}
+	t.Log(u)
+	if u.Token != token || u.SignRequest != certStr || u.Certificate != signedCertPem {
+		t.Fail()
+	}
+}

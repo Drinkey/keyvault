@@ -31,3 +31,11 @@ func GetCertificate(name string) (cert Certificate, err error) {
 	}
 	return
 }
+
+func UpdateSignedCertificateByName(name, signed string) (cert Certificate, err error) {
+	err = db.Model(&cert).Where("name = ?", name).Update("certificate", signed).Error
+	if err != nil {
+		return
+	}
+	return GetCertificate(name)
+}
