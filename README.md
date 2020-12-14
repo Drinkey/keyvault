@@ -14,7 +14,7 @@ Practice Project: key vault to store your secrets, provide RESTFul API, build wi
 - the certificate must have OU property, server will use it as the namespace of secret to query database
 - server has a master key to encrypt/decrypt the secrets using AES
 - the master key is randomly generated and stored in a file that only visible to the user who start the service
-- the master key is also encrypted in the file and only visible during runtime
+- the master key is also encrypted in the database and only visible during runtime
 - server has RESTFul API to store the secrets, get secrets, issue certificates
 - communication is protected by TLS
 
