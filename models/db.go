@@ -18,11 +18,11 @@ var db *gorm.DB
 
 func init() {
 	log.SetPrefix("model - ")
-	DBPATH := getDbPath()
+	dbPath := getDbPath()
 
-	dsn := DBPATH
+	dsn := dbPath
 
-	log.Printf("initializing database: %s", DBPATH)
+	log.Printf("initializing database: %s", dbPath)
 
 	if dsn == "" {
 		log.Print("Specify the DB Path in environment variable DB_PATH")
@@ -32,8 +32,8 @@ func init() {
 
 	initDbRequired := true
 
-	if internal.FileExist(DBPATH) {
-		log.Printf("database file %s already exist", DBPATH)
+	if internal.FileExist(dbPath) {
+		log.Printf("database file %s already exist", dbPath)
 		initDbRequired = false
 	}
 

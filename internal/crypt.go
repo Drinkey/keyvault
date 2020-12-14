@@ -13,7 +13,6 @@ import (
 const KeyMask = "******"
 
 func aesGcmCipher(key []byte) cipher.AEAD {
-	// keyBytes := []byte(key)
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		panic(err.Error())

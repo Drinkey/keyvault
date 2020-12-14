@@ -1,3 +1,6 @@
+/*
+Package certio provides all operations against certificate.
+*/
 package certio
 
 type SubjectSchema struct {

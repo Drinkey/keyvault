@@ -1,73 +1,43 @@
+/*
+Package certio provides all operations against certificate.
+*/
 package certio
 
 import (
-	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"math/big"
-	"os"
 
 	"github.com/Drinkey/keyvault/internal"
 )
 
 func LoadCACertificate(c CertFilePath) (CertificateAuthority, error) {
-	ca_txt, err := ioutil.ReadFile(c.CaCertPath)
+	caTxt, err := ioutil.ReadFile(c.CaCertPath)
 	if err != nil {
 		log.Fatal("read certificate file failed", err)
 	}
-	ca_block, _ := pem.Decode([]byte(ca_txt))
-	cacert, err := x509.ParseCertificate(ca_block.Bytes)
+	caBlock, _ := pem.Decode([]byte(caTxt))
+	caCert, err := x509.ParseCertificate(caBlock.Bytes)
 	if err != nil {
 		log.Fatal("parse certificate content failed", err)
 	}
 
-	ca_pkey_txt, err := ioutil.ReadFile(c.CaPrivKeyPath)
+	caPrivKeyTxt, err := ioutil.ReadFile(c.CaPrivKeyPath)
 	if err != nil {
 		log.Fatal("read private key file failed", err)
 	}
-	ca_pkey_block, _ := pem.Decode([]byte(ca_pkey_txt))
-	ca_pkey, err := x509.ParsePKCS1PrivateKey(ca_pkey_block.Bytes)
+	caPrivKeyBlock, _ := pem.Decode([]byte(caPrivKeyTxt))
+	caPrivKey, err := x509.ParsePKCS1PrivateKey(caPrivKeyBlock.Bytes)
 	if err != nil {
 		log.Fatal("parse private key content failed", err)
 	}
 
-	return CertificateAuthority{CaCert: cacert, CaCertBytes: ca_block.Bytes, CaPrivKey: ca_pkey}, nil
-}
-
-func Issue(c *x509.Certificate, ca CertificateAuthority, k interface{}) ([]byte, error) {
-	certBytes, err := x509.CreateCertificate(rand.Reader, c, ca.CaCert, k, ca.CaPrivKey)
-	if err != nil {
-		return []byte{}, err
-	}
-	return certBytes, nil
-}
-
-func getSubjectName(sc SubjectSchema) pkix.Name {
-	return pkix.Name{
-		Organization:  []string{sc.Organization},
-		Country:       []string{sc.Country},
-		Province:      []string{sc.Province},
-		Locality:      []string{sc.Locality},
-		StreetAddress: []string{sc.Address},
-		PostalCode:    []string{sc.PostalCode},
-		CommonName:    sc.CommonName,
-	}
-}
-
-func SavePemFile(certype string, content []byte, filename string, perm os.FileMode) error {
-	PEM := new(bytes.Buffer)
-	pem.Encode(PEM, &pem.Block{
-		Type:  certype,
-		Bytes: content,
-	})
-
-	return ioutil.WriteFile(filename, PEM.Bytes(), 0600)
+	return CertificateAuthority{CaCert: caCert, CaCertBytes: caBlock.Bytes, CaPrivKey: caPrivKey}, nil
 }
 
 func InitCACertificate(f CertFilePath, confFiles string) (CertificateAuthority, error) {

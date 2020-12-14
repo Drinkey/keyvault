@@ -1,11 +1,5 @@
 package models
 
-// type Secret struct {
-// 	ID        int       `json:"id"`
-// 	NameSpace Namespace `json:"namespace"`
-// 	Key       string    `json:"key"`
-// 	Value     string    `json:"value"`
-// }
 type Secret struct {
 	ID          uint      `json:"id" gorm:"primaryKey;autoIncrement"`
 	Key         string    `json:"key"`

@@ -1,3 +1,6 @@
+/*
+Package certio provides all operations against certificate.
+*/
 package certio
 
 import (
@@ -5,10 +8,10 @@ import (
 	"crypto/x509"
 )
 
-const CA_FILE = "ca.crt"
-const CERT_FILE = "cert.pem"
+const caFile = "ca.crt"
+const certFile = "cert.pem"
 
-// Store certificate related file path
+// CertFilePath Stores certificate related file path
 type CertFilePath struct {
 	CaCertPath        string
 	CaPrivKeyPath     string
@@ -16,7 +19,7 @@ type CertFilePath struct {
 	ServerPrivKeyPath string
 }
 
-// store CA cert and CA private key
+// CertificateAuthority stores CA cert and CA private key
 type CertificateAuthority struct {
 	CaCert      *x509.Certificate
 	CaCertBytes []byte

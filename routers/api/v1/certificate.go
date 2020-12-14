@@ -50,12 +50,12 @@ func CreateCertificateRequest(c *gin.Context) {
 }
 
 func createCertificateTemplate(csr *x509.CertificateRequest) *x509.Certificate {
-	NotBefore, NotAfter := internal.TimeRange(5)
+	notBefore, notAfter := internal.TimeRange(5)
 	return &x509.Certificate{
 		SerialNumber:       big.NewInt(210201),
 		Subject:            csr.Subject,
-		NotBefore:          NotBefore,
-		NotAfter:           NotAfter,
+		NotBefore:          notBefore,
+		NotAfter:           notAfter,
 		Signature:          csr.Signature,
 		SignatureAlgorithm: csr.SignatureAlgorithm,
 		PublicKeyAlgorithm: csr.PublicKeyAlgorithm,

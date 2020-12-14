@@ -59,7 +59,7 @@ func GetSecret(c *gin.Context) {
 	}
 	nonceByte, err := internal.DecodeString(s.Namespace.Nonce)
 	masterKeyByte, err := internal.DecodeString(s.Namespace.MasterKey)
-	// var resp Secret
+
 	s.Value = internal.Decrypt(cipherTextBytes, masterKeyByte, nonceByte)
 	s.Namespace.MasterKey = internal.KeyMask
 	s.Namespace.Nonce = internal.KeyMask
@@ -67,6 +67,8 @@ func GetSecret(c *gin.Context) {
 	c.JSON(http.StatusOK, s)
 }
 
+// CreateSecret create a secret record in database, sensitive fields of info
+// are encrypted or hashed.
 func CreateSecret(c *gin.Context) {
 
 	namespace := c.Param("namespace")
