@@ -17,10 +17,6 @@ type Namespace struct {
 	Nonce     string `json:"nonce"`
 }
 
-func GetNamespaces(c *gin.Context) {
-
-}
-
 func ListNamespaces(c *gin.Context) {
 	// var ns models.Namespace
 	r, err := models.ListNamespace()

@@ -32,11 +32,12 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Test
+    - name: Test with Codecov
       run: |
         echo ${PWD}
         mkdir certs
         ls -al
         cat debug.env
         source debug.env
-        go test -v ./...
+        go test -v ./... -coverprofile coverage.txt
+        bash <(curl -s https://codecov.io/bash)

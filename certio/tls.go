@@ -12,7 +12,7 @@ import (
 	"os"
 )
 
-func CreateTLSConfig(c CertFilePath) (*tls.Config, error) {
+func CreateTLSConfig(c CertFilePaths) (*tls.Config, error) {
 	// 1. load ca to cert pool
 	// 2. load cert and key
 	// 3. construct tls config
@@ -26,7 +26,7 @@ func CreateTLSConfig(c CertFilePath) (*tls.Config, error) {
 		log.Panic("append CA certificate to CertPool failed")
 	}
 
-	cert, err := tls.LoadX509KeyPair(c.ServerCertPath, c.ServerPrivKeyPath)
+	cert, err := tls.LoadX509KeyPair(c.WebCertPath, c.WebPrivKeyPath)
 	if err != nil {
 		log.Panic("load server certificate failed")
 	}
@@ -38,7 +38,7 @@ func CreateTLSConfig(c CertFilePath) (*tls.Config, error) {
 	}, nil
 }
 
-func BuildTLSConfig(certs CertFilePath) *tls.Config {
+func BuildTLSConfig(certs CertFilePaths) *tls.Config {
 	tlsConfig, err := CreateTLSConfig(certs)
 	if err != nil {
 		log.Panic("create TLS server config failed")

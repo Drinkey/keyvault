@@ -19,18 +19,18 @@ func TestSecretCreateShouldSuccess(t *testing.T) {
 
 	// 1. Create namespace for secret
 	r.POST(uri, CreateNamespace)
-	reqJson, _ := json.Marshal(map[string]string{
+	reqJSON, _ := json.Marshal(map[string]string{
 		"name": "TEST_NS",
 	})
-	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJson))
+	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJSON))
 	r.ServeHTTP(w, req)
 	// 2. Create a new secret under the namespace
 	r.POST(fmt.Sprintf("%s/:namespace", uri), CreateSecret)
-	reqJson, _ = json.Marshal(map[string]string{
+	reqJSON, _ = json.Marshal(map[string]string{
 		"key":   "TEST_SECRET",
 		"value": "The_hiddenPassw0rd!",
 	})
-	req, _ = http.NewRequest("POST", fmt.Sprintf("%s/TEST_NS", uri), bytes.NewBuffer(reqJson))
+	req, _ = http.NewRequest("POST", fmt.Sprintf("%s/TEST_NS", uri), bytes.NewBuffer(reqJSON))
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -51,18 +51,18 @@ func TestSecretGetWithSpecificNamespaceAndKey(t *testing.T) {
 
 	// 1. Create namespace for secret
 	r.POST(uri, CreateNamespace)
-	reqJson, _ := json.Marshal(map[string]string{
+	reqJSON, _ := json.Marshal(map[string]string{
 		"name": "TEST_NS_2",
 	})
-	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJson))
+	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJSON))
 	r.ServeHTTP(w, req)
 	// 2. Create a new secret under the namespace
 	r.POST(fmt.Sprintf("%s/:namespace", uri), CreateSecret)
-	reqJson, _ = json.Marshal(map[string]string{
+	reqJSON, _ = json.Marshal(map[string]string{
 		"key":   "TEST_SECRET_2",
 		"value": "The_hiddenPassw0rd!",
 	})
-	req, _ = http.NewRequest("POST", fmt.Sprintf("%s/TEST_NS_2", uri), bytes.NewBuffer(reqJson))
+	req, _ = http.NewRequest("POST", fmt.Sprintf("%s/TEST_NS_2", uri), bytes.NewBuffer(reqJSON))
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 

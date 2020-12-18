@@ -3,8 +3,10 @@ package v1
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -18,11 +20,11 @@ func TestCertificateCreate(t *testing.T) {
 	uri := "/api/v1/cert/req"
 	r.POST(uri, CreateCertificateRequest)
 
-	reqJson, _ := json.Marshal(map[string]string{
+	reqJSON, _ := json.Marshal(map[string]string{
 		"name": "DATABASE",
 		"req":  certReq,
 	})
-	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJson))
+	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJSON))
 	r.ServeHTTP(w, req)
 
 	var resp Certificate
@@ -38,6 +40,72 @@ func TestCertificateCreate(t *testing.T) {
 		t.Logf("got response %s, expect: DATABASE", resp.Name)
 		t.Logf("got response %s, expect: %s", resp.SignRequest, certReq)
 		t.Log(resp)
+		t.Fail()
+	}
+}
+
+func TestCertificateGet(t *testing.T) {
+	r := gin.Default()
+	w := httptest.NewRecorder()
+	uri := "/api/v1/cert"
+	r.POST(fmt.Sprintf("%s/req", uri), CreateCertificateRequest)
+	r.GET(fmt.Sprintf("%s/", uri), GetCertificate)
+
+	reqJSON, _ := json.Marshal(map[string]string{
+		"name": "DATABASE_MYSQL",
+		"req":  certReq,
+	})
+	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/req", uri), bytes.NewBuffer(reqJSON))
+	r.ServeHTTP(w, req)
+
+	var resp Certificate
+	t.Log(w.Body.String())
+	json.Unmarshal(w.Body.Bytes(), &resp)
+
+	if w.Code != http.StatusCreated {
+		t.Logf("response code validation failed: code=%d, expected=%d", w.Code, http.StatusCreated)
+		t.Fail()
+	}
+	if resp.Name != "DATABASE_MYSQL" {
+		t.Log("response body validation failed:")
+		t.Logf("got response %s, expect: DATABASE", resp.Name)
+		t.Logf("got response %s, expect: %s", resp.SignRequest, certReq)
+		t.Log(resp)
+		t.Fail()
+	}
+
+	t.Log("Getting the cert just added")
+
+	req, _ = http.NewRequest("GET", fmt.Sprintf("%s/?q=DATABASE_MYSQL", uri), nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	t.Log(w.Body.String())
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	if w.Code != http.StatusOK {
+		t.Logf("response code validation failed: code=%d, expected=%d", w.Code, http.StatusCreated)
+		t.Fail()
+	}
+	if resp.Name != "DATABASE_MYSQL" {
+		t.Log("response body validation failed:")
+		t.Logf("got response %s, expect: DATABASE", resp.Name)
+		t.Logf("got response %s, expect: %s", resp.SignRequest, certReq)
+		t.Log(resp)
+		t.Fail()
+	}
+}
+
+func TestCertificateCACertGet(t *testing.T) {
+	r := gin.Default()
+	w := httptest.NewRecorder()
+	uri := "/api/v1/cert"
+	r.GET(fmt.Sprintf("%s/ca", uri), GetCACertificate)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/ca", uri), nil)
+	w = httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	var resp CACertificate
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	if !strings.Contains(resp.Certificate, "CERTIFICATE") {
+		t.Logf("got actual response: %s", resp.Certificate)
 		t.Fail()
 	}
 }

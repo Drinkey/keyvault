@@ -17,10 +17,10 @@ func TestNamespaceCreateSuccess(t *testing.T) {
 	uri := "/api/v1/namespace"
 	r.POST(uri, CreateNamespace)
 
-	reqJson, _ := json.Marshal(map[string]string{
+	reqJSON, _ := json.Marshal(map[string]string{
 		"name": "TEST_NS",
 	})
-	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJson))
+	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJSON))
 	r.ServeHTTP(w, req)
 
 	var respNamespace Namespace
@@ -46,10 +46,10 @@ func TestNamespaceListSuccess(t *testing.T) {
 	r.GET(uri, ListNamespaces)
 
 	for _, ns := range []string{"Test_NS-Ls1", "Test_NS-Ls2", "Test_NS-Ls3"} {
-		reqJson, _ := json.Marshal(map[string]string{
+		reqJSON, _ := json.Marshal(map[string]string{
 			"name": ns,
 		})
-		req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJson))
+		req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJSON))
 		r.ServeHTTP(w, req)
 		if w.Code != http.StatusCreated {
 			t.Logf("response code validation failed: code=%d, expected=%d", w.Code, http.StatusCreated)
@@ -76,10 +76,10 @@ func TestNamespaceCreateDuplicatedShouldFail(t *testing.T) {
 	uri := "/api/v1/namespace"
 	r.POST(uri, CreateNamespace)
 
-	reqJson, _ := json.Marshal(map[string]string{
+	reqJSON, _ := json.Marshal(map[string]string{
 		"name": "TEST_NS_DUP",
 	})
-	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJson))
+	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJSON))
 	r.ServeHTTP(w, req)
 	var respNamespace Namespace
 	t.Log(w.Body.String())
