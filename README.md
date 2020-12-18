@@ -1,6 +1,8 @@
 # keyvault
 
 ![Go](https://github.com/Drinkey/keyvault/workflows/Go/badge.svg?branch=main)
+[![codecov](https://codecov.io/gh/Drinkey/keyvault/branch/main/graph/badge.svg?token=DKOXF0NYVN)](https://codecov.io/gh/Drinkey/keyvault)
+
 
 Practice Project: key vault to store your secrets, provide RESTFul API, build with Gin
 
