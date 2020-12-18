@@ -62,3 +62,27 @@ func TestCryptDecryptionProcess(t *testing.T) {
 		})
 	})
 }
+
+func TestCryptGenerateRandomKey(t *testing.T) {
+	k := GenerateRandomKey(20)
+	if len(k) != 20 {
+		t.Logf("expected key len=20, actual key len=%d", len(k))
+		t.Fail()
+	}
+}
+
+func TestCryptGenerateMasterKey(t *testing.T) {
+	k := GenerateMasterKey()
+	if len(k) != 32 {
+		t.Logf("expected key len=32, actual key len=%d", len(k))
+		t.Fail()
+	}
+}
+
+func TestCryptGenerateNonce(t *testing.T) {
+	k := GenerateNonce()
+	if len(k) != 12 {
+		t.Logf("expected key len=12, actual key len=%d", len(k))
+		t.Fail()
+	}
+}
