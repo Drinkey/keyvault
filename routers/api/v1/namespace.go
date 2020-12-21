@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Drinkey/keyvault/internal"
 	"github.com/Drinkey/keyvault/models"
+	"github.com/Drinkey/keyvault/pkg/crypt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -45,8 +45,8 @@ func CreateNamespace(c *gin.Context) {
 		return
 	}
 
-	req.MasterKey = internal.EncodeByte(internal.GenerateMasterKey())
-	req.Nonce = internal.EncodeByte(internal.GenerateNonce())
+	req.MasterKey = crypt.EncodeByte(crypt.GenerateMasterKey())
+	req.Nonce = crypt.EncodeByte(crypt.GenerateNonce())
 
 	// var data models.Namespace
 	err := models.CreateNamespace(req.Name, req.MasterKey, req.Nonce)
@@ -56,7 +56,7 @@ func CreateNamespace(c *gin.Context) {
 	}
 	// Get the record just saved and mask sensitive data
 	newNs, err := models.GetNamespace(req.Name)
-	newNs.MasterKey = internal.KeyMask
-	newNs.Nonce = internal.KeyMask
+	newNs.MasterKey = crypt.KeyMask
+	newNs.Nonce = crypt.KeyMask
 	c.JSON(http.StatusCreated, newNs)
 }

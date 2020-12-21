@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Drinkey/keyvault/internal"
+	"github.com/Drinkey/keyvault/pkg/utils"
 )
 
 func setup() (dir, config string) {
@@ -76,7 +76,7 @@ func TestCertificateCASelfSigned(t *testing.T) {
 		t.Log(err)
 		t.Fail()
 	}
-	if !internal.FileExist(cfg.Paths.CaPrivKeyPath) {
+	if !utils.FileExist(cfg.Paths.CaPrivKeyPath) {
 		t.Logf("Private Key file does not exist after save: %s", cfg.Paths.CaPrivKeyPath)
 		t.Fail()
 	}
@@ -88,7 +88,7 @@ func TestCertificateCASelfSigned(t *testing.T) {
 		t.Fail()
 	}
 	ca.Save(cfg.Paths.CaCertPath, caCert)
-	if !internal.FileExist(cfg.Paths.CaCertPath) {
+	if !utils.FileExist(cfg.Paths.CaCertPath) {
 		t.Logf("CA Cert file does not exist after save: %s", cfg.Paths.CaCertPath)
 		t.Fail()
 	}
@@ -115,7 +115,7 @@ func TestCertificateManSignCertificate(t *testing.T) {
 		t.Log(err)
 		t.Fail()
 	}
-	if !internal.FileExist(cfg.Paths.WebPrivKeyPath) {
+	if !utils.FileExist(cfg.Paths.WebPrivKeyPath) {
 		t.Logf("Private Key file does not exist after save: %s", cfg.Paths.WebPrivKeyPath)
 		t.Fail()
 	}
@@ -129,7 +129,7 @@ func TestCertificateManSignCertificate(t *testing.T) {
 		t.Fail()
 	}
 	web.Save(cfg.Paths.WebCertPath, webCert)
-	if !internal.FileExist(cfg.Paths.WebCertPath) {
+	if !utils.FileExist(cfg.Paths.WebCertPath) {
 		t.Logf("CA Cert file does not exist after save: %s", cfg.Paths.WebCertPath)
 		t.Fail()
 	}

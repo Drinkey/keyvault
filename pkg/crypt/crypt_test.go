@@ -1,4 +1,4 @@
-package internal
+package crypt
 
 import (
 	"encoding/hex"

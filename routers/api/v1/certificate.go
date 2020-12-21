@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/Drinkey/keyvault/certio"
-	"github.com/Drinkey/keyvault/internal"
 	"github.com/Drinkey/keyvault/models"
+	"github.com/Drinkey/keyvault/pkg/crypt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,7 +32,7 @@ func CreateCertificateRequest(c *gin.Context) {
 	err := models.CreateCertificateRequest(
 		req.Name,
 		req.SignRequest,
-		internal.EncodeByte(internal.GenerateRandomKey(20)),
+		crypt.EncodeByte(crypt.GenerateRandomKey(20)),
 	)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -45,7 +45,7 @@ func CreateCertificateRequest(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	newCert.SignRequest = internal.KeyMask
+	newCert.SignRequest = crypt.KeyMask
 	c.JSON(http.StatusCreated, newCert)
 }
 

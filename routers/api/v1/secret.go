@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Drinkey/keyvault/internal"
 	"github.com/Drinkey/keyvault/models"
+	"github.com/Drinkey/keyvault/pkg/crypt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,7 +33,7 @@ func GetSecret(c *gin.Context) {
 	key := c.Query("q")
 	log.Printf("Query secret [%s] under namespace %s", key, namespace)
 
-	s, err := models.GetSecret(internal.Sha256Sum(key), namespace)
+	s, err := models.GetSecret(crypt.Sha256Sum(key), namespace)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -49,7 +49,7 @@ func GetSecret(c *gin.Context) {
 		return
 	}
 
-	cipherTextBytes, err := internal.DecodeString(s.Value)
+	cipherTextBytes, err := crypt.DecodeString(s.Value)
 	if err != nil {
 		log.Printf("failed to decode string %s", s.Value)
 		c.JSON(http.StatusNotFound, gin.H{
@@ -57,12 +57,12 @@ func GetSecret(c *gin.Context) {
 		})
 		return
 	}
-	nonceByte, err := internal.DecodeString(s.Namespace.Nonce)
-	masterKeyByte, err := internal.DecodeString(s.Namespace.MasterKey)
+	nonceByte, err := crypt.DecodeString(s.Namespace.Nonce)
+	masterKeyByte, err := crypt.DecodeString(s.Namespace.MasterKey)
 
-	s.Value = internal.Decrypt(cipherTextBytes, masterKeyByte, nonceByte)
-	s.Namespace.MasterKey = internal.KeyMask
-	s.Namespace.Nonce = internal.KeyMask
+	s.Value = crypt.Decrypt(cipherTextBytes, masterKeyByte, nonceByte)
+	s.Namespace.MasterKey = crypt.KeyMask
+	s.Namespace.Nonce = crypt.KeyMask
 
 	c.JSON(http.StatusOK, s)
 }
@@ -103,13 +103,13 @@ func CreateSecret(c *gin.Context) {
 	}
 
 	// 2. encrypt secret value with master key
-	nonceByte, err := internal.DecodeString(ns.Nonce)
-	masterKeyByte, err := internal.DecodeString(ns.MasterKey)
+	nonceByte, err := crypt.DecodeString(ns.Nonce)
+	masterKeyByte, err := crypt.DecodeString(ns.MasterKey)
 
-	encryptDataBase64 := internal.EncodeByte(
-		internal.Encrypt(req.Value, masterKeyByte, nonceByte),
+	encryptDataBase64 := crypt.EncodeByte(
+		crypt.Encrypt(req.Value, masterKeyByte, nonceByte),
 	)
-	hashKey := internal.Sha256Sum(req.Key)
+	hashKey := crypt.Sha256Sum(req.Key)
 
 	// 3. save to database
 	err = models.CreateSecret(hashKey, encryptDataBase64, namespace)

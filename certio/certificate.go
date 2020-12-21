@@ -8,7 +8,7 @@ import (
 	"log"
 	"math/big"
 
-	"github.com/Drinkey/keyvault/internal"
+	"github.com/Drinkey/keyvault/pkg/utils"
 )
 
 const (
@@ -36,7 +36,7 @@ type WebCertificate struct {
 }
 
 func (c WebCertificate) CreateTemplate(config WebCertConfig) *x509.Certificate {
-	NotBefore, NotAfter := internal.TimeRange(config.Valid)
+	NotBefore, NotAfter := utils.TimeRange(config.Valid)
 	return &x509.Certificate{
 		SerialNumber: big.NewInt(config.SerialNumber),
 		Subject:      getSubjectName(config.Subject),
@@ -66,7 +66,7 @@ type CA struct {
 }
 
 func (ca CA) CreateTemplate(config CaCertConfig) *x509.Certificate {
-	NotBefore, NotAfter := internal.TimeRange(config.Valid)
+	NotBefore, NotAfter := utils.TimeRange(config.Valid)
 
 	return &x509.Certificate{
 		SerialNumber:          big.NewInt(config.SerialNumber),
@@ -149,7 +149,7 @@ type CertificateRequest struct {
 }
 
 func (c CertificateRequest) CreateTemplate(csr *x509.CertificateRequest) *x509.Certificate {
-	notBefore, notAfter := internal.TimeRange(5)
+	notBefore, notAfter := utils.TimeRange(5)
 	return &x509.Certificate{
 		SerialNumber:       big.NewInt(210201),
 		Subject:            csr.Subject,

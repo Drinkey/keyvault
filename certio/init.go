@@ -6,7 +6,7 @@ package certio
 import (
 	"log"
 
-	"github.com/Drinkey/keyvault/internal"
+	"github.com/Drinkey/keyvault/pkg/utils"
 )
 
 var Cfg CertificateConfiguration
@@ -92,9 +92,9 @@ func init() {
 	var CertFiles = Cfg.Paths
 
 	log.Printf("initialize certificates under %s", certDirectory)
-	if !internal.FileExist(CertFiles.CaCertPath) {
+	if !utils.FileExist(CertFiles.CaCertPath) {
 		log.Printf("CA Cert is not exist, try to create new CA with config file %s", certConfigFile)
-		if !internal.FileExist(certConfigFile) {
+		if !utils.FileExist(certConfigFile) {
 			log.Panic("Unable to create new CA because no configuration for CA was found")
 		}
 		if err := initCACertificate(Cfg); err != nil {
@@ -103,9 +103,9 @@ func init() {
 		if err := createWebCertificate(Cfg); err != nil {
 			log.Fatal("creating certificate failed: ", err)
 		}
-	} else if !internal.FileExist(Cfg.Paths.WebCertPath) {
+	} else if !utils.FileExist(Cfg.Paths.WebCertPath) {
 		log.Print("Certificate private key is not exist, try to create new certificate with new key")
-		if !internal.FileExist(Cfg.Paths.CaCertPath) {
+		if !utils.FileExist(Cfg.Paths.CaCertPath) {
 			log.Panic("Unable to create new certificate because no configuration for certificate found")
 		}
 		if err := createWebCertificate(Cfg); err != nil {

@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Drinkey/keyvault/internal"
+	"github.com/Drinkey/keyvault/pkg/utils"
 	_ "github.com/mattn/go-sqlite3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -32,7 +32,7 @@ func init() {
 
 	initDbRequired := true
 
-	if internal.FileExist(dbPath) {
+	if utils.FileExist(dbPath) {
 		log.Printf("database file %s already exist", dbPath)
 		initDbRequired = false
 	}

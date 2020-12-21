@@ -12,7 +12,8 @@ require (
 
 replace (
 	github.com/Drinkey/keyvault/certio => ./certio
-	github.com/Drinkey/keyvault/internal => ./internal
+	github.com/Drinkey/keyvault/pkg/crypt => ./pkg/crypt
+	github.com/Drinkey/keyvault/pkg/utils => ./pkt/utils
 	github.com/Drinkey/keyvault/models => ./models
 	github.com/Drinkey/keyvault/routers => ./routers
 )
