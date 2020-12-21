@@ -16,4 +16,5 @@ replace (
 	github.com/Drinkey/keyvault/pkg/utils => ./pkt/utils
 	github.com/Drinkey/keyvault/models => ./models
 	github.com/Drinkey/keyvault/routers => ./routers
+	github.com/Drinkey/keyvault/pkg/e => ./pkg/e
 )

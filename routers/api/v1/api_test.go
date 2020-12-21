@@ -18,7 +18,8 @@ func TestPingResponse(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fail()
 	}
-	if !strings.Contains(w.Body.String(), "pong") {
+	t.Log(w.Body.String())
+	if !strings.Contains(w.Body.String(), "PONG") {
 		t.Fail()
 	}
 }

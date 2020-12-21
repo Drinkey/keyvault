@@ -24,8 +24,11 @@ func TestNamespaceCreateSuccess(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	var respNamespace Namespace
+	resp := KvResponse{Data: &respNamespace}
 	t.Log(w.Body.String())
-	json.Unmarshal(w.Body.Bytes(), &respNamespace)
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	t.Log(resp.Data)
+	t.Log(respNamespace)
 
 	if w.Code != http.StatusCreated {
 		t.Logf("response code validation failed: code=%d, expected=%d", w.Code, http.StatusCreated)
@@ -82,8 +85,9 @@ func TestNamespaceCreateDuplicatedShouldFail(t *testing.T) {
 	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJSON))
 	r.ServeHTTP(w, req)
 	var respNamespace Namespace
+	resp := KvResponse{Data: &respNamespace}
 	t.Log(w.Body.String())
-	json.Unmarshal(w.Body.Bytes(), &respNamespace)
+	json.Unmarshal(w.Body.Bytes(), &resp)
 
 	if w.Code != http.StatusCreated {
 		t.Logf("first time response code validation failed: code=%d, expected=%d", w.Code, http.StatusCreated)

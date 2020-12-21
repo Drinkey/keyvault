@@ -27,19 +27,21 @@ func TestCertificateCreate(t *testing.T) {
 	req, _ := http.NewRequest("POST", uri, bytes.NewBuffer(reqJSON))
 	r.ServeHTTP(w, req)
 
-	var resp Certificate
+	var respCert Certificate
+	resp := KvResponse{Data: &respCert}
 	t.Log(w.Body.String())
 	json.Unmarshal(w.Body.Bytes(), &resp)
+	t.Log(respCert)
 
 	if w.Code != http.StatusCreated {
 		t.Logf("response code validation failed: code=%d, expected=%d", w.Code, http.StatusCreated)
 		t.Fail()
 	}
-	if resp.Name != "DATABASE" {
+	if respCert.Name != "DATABASE" {
 		t.Log("response body validation failed:")
-		t.Logf("got response %s, expect: DATABASE", resp.Name)
-		t.Logf("got response %s, expect: %s", resp.SignRequest, certReq)
-		t.Log(resp)
+		t.Logf("got response %s, expect: DATABASE", respCert.Name)
+		t.Logf("got response %s, expect: %s", respCert.SignRequest, certReq)
+		t.Log(respCert)
 		t.Fail()
 	}
 }
@@ -58,7 +60,8 @@ func TestCertificateGet(t *testing.T) {
 	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/req", uri), bytes.NewBuffer(reqJSON))
 	r.ServeHTTP(w, req)
 
-	var resp Certificate
+	var respCert Certificate
+	resp := KvResponse{Data: &respCert}
 	t.Log(w.Body.String())
 	json.Unmarshal(w.Body.Bytes(), &resp)
 
@@ -66,11 +69,11 @@ func TestCertificateGet(t *testing.T) {
 		t.Logf("response code validation failed: code=%d, expected=%d", w.Code, http.StatusCreated)
 		t.Fail()
 	}
-	if resp.Name != "DATABASE_MYSQL" {
+	if respCert.Name != "DATABASE_MYSQL" {
 		t.Log("response body validation failed:")
-		t.Logf("got response %s, expect: DATABASE", resp.Name)
-		t.Logf("got response %s, expect: %s", resp.SignRequest, certReq)
-		t.Log(resp)
+		t.Logf("got response %s, expect: DATABASE", respCert.Name)
+		t.Logf("got response %s, expect: %s", respCert.SignRequest, certReq)
+		t.Log(respCert)
 		t.Fail()
 	}
 
@@ -85,11 +88,11 @@ func TestCertificateGet(t *testing.T) {
 		t.Logf("response code validation failed: code=%d, expected=%d", w.Code, http.StatusCreated)
 		t.Fail()
 	}
-	if resp.Name != "DATABASE_MYSQL" {
+	if respCert.Name != "DATABASE_MYSQL" {
 		t.Log("response body validation failed:")
-		t.Logf("got response %s, expect: DATABASE", resp.Name)
-		t.Logf("got response %s, expect: %s", resp.SignRequest, certReq)
-		t.Log(resp)
+		t.Logf("got response %s, expect: DATABASE", respCert.Name)
+		t.Logf("got response %s, expect: %s", respCert.SignRequest, certReq)
+		t.Log(respCert)
 		t.Fail()
 	}
 }
@@ -102,10 +105,11 @@ func TestCertificateCACertGet(t *testing.T) {
 	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/ca", uri), nil)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-	var resp CACertificate
+	var respCert CACertificate
+	resp := KvResponse{Data: &respCert}
 	json.Unmarshal(w.Body.Bytes(), &resp)
-	if !strings.Contains(resp.Certificate, "CERTIFICATE") {
-		t.Logf("got actual response: %s", resp.Certificate)
+	if !strings.Contains(respCert.Certificate, "CERTIFICATE") {
+		t.Logf("got actual response: %s", respCert.Certificate)
 		t.Fail()
 	}
 }

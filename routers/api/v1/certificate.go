@@ -8,6 +8,7 @@ import (
 	"github.com/Drinkey/keyvault/certio"
 	"github.com/Drinkey/keyvault/models"
 	"github.com/Drinkey/keyvault/pkg/crypt"
+	"github.com/Drinkey/keyvault/pkg/e"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,7 +27,8 @@ type CACertificate struct {
 func CreateCertificateRequest(c *gin.Context) {
 	var req Certificate
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		data := fmt.Sprintf("The POST payload is invalid: %s", err.Error())
+		c.JSON(http.StatusBadRequest, MakeResponse(e.INVALID_PARAMS, data))
 		return
 	}
 	err := models.CreateCertificateRequest(
@@ -35,18 +37,20 @@ func CreateCertificateRequest(c *gin.Context) {
 		crypt.EncodeByte(crypt.GenerateRandomKey(20)),
 	)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		data := fmt.Sprintf("Error when creating record: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, MakeResponse(e.ERROR, data))
 		return
 	}
 	newCert, err := models.GetCertificate(req.Name)
 	log.Print("got from db:")
 	log.Println(newCert)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		data := fmt.Sprintf("Error when retrieving record: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, MakeResponse(e.ERROR, data))
 		return
 	}
 	newCert.SignRequest = crypt.KeyMask
-	c.JSON(http.StatusCreated, newCert)
+	c.JSON(http.StatusCreated, MakeResponse(e.SUCCESS, newCert))
 }
 
 func IssueCertificate(c *gin.Context) {
@@ -56,7 +60,8 @@ func IssueCertificate(c *gin.Context) {
 	// 4. Construct response payload and return
 	var csrPEM certio.CertificateRequest
 	if err := c.ShouldBindJSON(&csrPEM); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		data := fmt.Sprintf("The POST payload is invalid: %s", err.Error())
+		c.JSON(http.StatusBadRequest, MakeResponse(e.INVALID_PARAMS, data))
 		return
 	}
 	log.Println(csrPEM)
@@ -66,13 +71,13 @@ func IssueCertificate(c *gin.Context) {
 	var r certio.CertificateResponse
 	r.Certificate, r.CA = certio.IssueCertificate(csrPEM.Request)
 
-	c.JSON(http.StatusCreated, r)
+	c.JSON(http.StatusCreated, MakeResponse(e.SUCCESS, r))
 }
 
 func GetCACertificate(c *gin.Context) {
 	log.Print("reading CA certificate")
 	r := CACertificate{Certificate: certio.CaContainer.String}
-	c.JSON(http.StatusOK, r)
+	c.JSON(http.StatusOK, MakeResponse(e.SUCCESS, r))
 }
 
 func GetCertificate(c *gin.Context) {
@@ -80,18 +85,15 @@ func GetCertificate(c *gin.Context) {
 	log.Printf("got query for %s", q)
 	cert, err := models.GetCertificate(q)
 	if err != nil {
-		log.Printf("get certificate %s error", q)
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": fmt.Sprintf("et certificate error: %s", err.Error()),
-		})
+		data := fmt.Sprintf("get certificate %s error", q)
+		log.Printf(data)
+		c.JSON(http.StatusNotFound, MakeResponse(e.NOT_FOUND, data))
 		return
 	}
 	if cert.IsEmpty() {
-		log.Printf("failed to get certificate %s, 0 result found", q)
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": fmt.Sprintf("failed to get certificate %s, 0 result found", q),
-		})
+		data := fmt.Sprintf("failed to get certificate %s, 0 result found", q)
+		c.JSON(http.StatusNotFound, MakeResponse(e.NOT_FOUND, data))
 		return
 	}
-	c.JSON(http.StatusOK, cert)
+	c.JSON(http.StatusOK, MakeResponse(e.SUCCESS, cert))
 }

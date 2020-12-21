@@ -7,6 +7,7 @@ import (
 
 	"github.com/Drinkey/keyvault/models"
 	"github.com/Drinkey/keyvault/pkg/crypt"
+	"github.com/Drinkey/keyvault/pkg/e"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,10 +22,18 @@ func ListNamespaces(c *gin.Context) {
 	// var ns models.Namespace
 	r, err := models.ListNamespace()
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"namespace": r})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": e.ERROR,
+			"msg":  e.GetMsg(e.ERROR),
+			"data": fmt.Sprintf("Error when retrieving namespace: %s", err.Error()),
+		})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": r})
+	c.JSON(http.StatusOK, gin.H{
+		"code": e.SUCCESS,
+		"msg":  e.GetMsg(e.SUCCESS),
+		"data": r,
+	})
 }
 
 func CreateNamespace(c *gin.Context) {
@@ -32,7 +41,11 @@ func CreateNamespace(c *gin.Context) {
 
 	var req Namespace
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": e.INVALID_PARAMS,
+			"msg":  e.GetMsg(e.INVALID_PARAMS),
+			"data": fmt.Sprintf("The POST payload is invalid: %s", err.Error()),
+		})
 		return
 	}
 
@@ -40,7 +53,9 @@ func CreateNamespace(c *gin.Context) {
 		msg := fmt.Sprintf(`Client not authorized to create namespace=%s.
 		Cert OU and Namespace must be the same`, req.Name)
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": msg,
+			"code": e.NOT_AUTHORIED,
+			"msg":  e.GetMsg(e.NOT_AUTHORIED),
+			"data": msg,
 		})
 		return
 	}
@@ -51,12 +66,16 @@ func CreateNamespace(c *gin.Context) {
 	// var data models.Namespace
 	err := models.CreateNamespace(req.Name, req.MasterKey, req.Nonce)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": e.ERROR,
+			"msg":  e.GetMsg(e.ERROR),
+			"data": fmt.Sprintf("Error when creating new namespace %s: %s", req.Name, err.Error()),
+		})
 		return
 	}
 	// Get the record just saved and mask sensitive data
 	newNs, err := models.GetNamespace(req.Name)
 	newNs.MasterKey = crypt.KeyMask
 	newNs.Nonce = crypt.KeyMask
-	c.JSON(http.StatusCreated, newNs)
+	c.JSON(http.StatusCreated, MakeResponse(e.SUCCESS, newNs))
 }
