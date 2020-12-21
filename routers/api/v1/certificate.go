@@ -7,8 +7,10 @@ import (
 
 	"github.com/Drinkey/keyvault/certio"
 	"github.com/Drinkey/keyvault/models"
+	"github.com/Drinkey/keyvault/pkg/app"
 	"github.com/Drinkey/keyvault/pkg/crypt"
 	"github.com/Drinkey/keyvault/pkg/e"
+	"github.com/Drinkey/keyvault/services/certificate_service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -81,19 +83,15 @@ func GetCACertificate(c *gin.Context) {
 }
 
 func GetCertificate(c *gin.Context) {
+	app := app.KvContext{Context: c}
 	q := c.Query("q")
 	log.Printf("got query for %s", q)
-	cert, err := models.GetCertificate(q)
+	var cs certificate_service.Certificate
+	cert, err := cs.Get(q)
 	if err != nil {
-		data := fmt.Sprintf("get certificate %s error", q)
-		log.Printf(data)
-		c.JSON(http.StatusNotFound, MakeResponse(e.NOT_FOUND, data))
+		// data := fmt.Sprintf("failed to get certificate %s", q)
+		app.Response(http.StatusNotFound, e.NOT_FOUND, nil)
 		return
 	}
-	if cert.IsEmpty() {
-		data := fmt.Sprintf("failed to get certificate %s, 0 result found", q)
-		c.JSON(http.StatusNotFound, MakeResponse(e.NOT_FOUND, data))
-		return
-	}
-	c.JSON(http.StatusOK, MakeResponse(e.SUCCESS, cert))
+	app.Response(http.StatusOK, e.SUCCESS, cert)
 }

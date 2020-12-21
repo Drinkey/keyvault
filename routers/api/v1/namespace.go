@@ -6,8 +6,9 @@ import (
 	"net/http"
 
 	"github.com/Drinkey/keyvault/models"
-	"github.com/Drinkey/keyvault/pkg/crypt"
+	"github.com/Drinkey/keyvault/pkg/app"
 	"github.com/Drinkey/keyvault/pkg/e"
+	"github.com/Drinkey/keyvault/services/namespace_service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,44 +39,41 @@ func ListNamespaces(c *gin.Context) {
 
 func CreateNamespace(c *gin.Context) {
 	log.Printf("Creating new namespace")
+	var (
+		app = app.KvContext{Context: c}
+		req Namespace
+	)
 
-	var req Namespace
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code": e.INVALID_PARAMS,
-			"msg":  e.GetMsg(e.INVALID_PARAMS),
-			"data": fmt.Sprintf("The POST payload is invalid: %s", err.Error()),
-		})
+		app.Response(http.StatusBadRequest, e.INVALID_PARAMS,
+			fmt.Sprintf("The POST payload is invalid: %s", err.Error()))
 		return
 	}
 
 	if !IsClientAuthorized(c.Request, req.Name) {
-		msg := fmt.Sprintf(`Client not authorized to create namespace=%s.
-		Cert OU and Namespace must be the same`, req.Name)
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"code": e.NOT_AUTHORIED,
-			"msg":  e.GetMsg(e.NOT_AUTHORIED),
-			"data": msg,
-		})
+		msg := fmt.Sprintf(`Mismatched OU in Certificate and Namespace`)
+		app.Response(http.StatusUnauthorized, e.NOT_AUTHORIED, msg)
 		return
 	}
 
-	req.MasterKey = crypt.EncodeByte(crypt.GenerateMasterKey())
-	req.Nonce = crypt.EncodeByte(crypt.GenerateNonce())
+	namespaceService := namespace_service.Namespace{
+		Name: req.Name,
+	}
 
-	// var data models.Namespace
-	err := models.CreateNamespace(req.Name, req.MasterKey, req.Nonce)
+	err := namespaceService.Create()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code": e.ERROR,
-			"msg":  e.GetMsg(e.ERROR),
-			"data": fmt.Sprintf("Error when creating new namespace %s: %s", req.Name, err.Error()),
-		})
+		app.Response(http.StatusInternalServerError, e.ERROR,
+			fmt.Sprintf("Error when creating new namespace %s: %s", req.Name, err.Error()),
+		)
 		return
 	}
-	// Get the record just saved and mask sensitive data
-	newNs, err := models.GetNamespace(req.Name)
-	newNs.MasterKey = crypt.KeyMask
-	newNs.Nonce = crypt.KeyMask
-	c.JSON(http.StatusCreated, MakeResponse(e.SUCCESS, newNs))
+
+	newNs, err := namespaceService.Get()
+	if err != nil {
+		app.Response(http.StatusNotFound, e.NOT_FOUND,
+			fmt.Sprintf("Error when getting new namespace %s just created: %s", req.Name, err.Error()),
+		)
+		return
+	}
+	app.Response(http.StatusCreated, e.SUCCESS, newNs)
 }
