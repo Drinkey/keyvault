@@ -6,9 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Drinkey/keyvault/certio"
-	"github.com/Drinkey/keyvault/models"
 	"github.com/Drinkey/keyvault/pkg/app"
-	"github.com/Drinkey/keyvault/pkg/crypt"
 	"github.com/Drinkey/keyvault/pkg/e"
 	"github.com/Drinkey/keyvault/services/certificate_service"
 	"github.com/gin-gonic/gin"
@@ -27,35 +25,31 @@ type CACertificate struct {
 }
 
 func CreateCertificateRequest(c *gin.Context) {
-	var req Certificate
+
+	var (
+		app = app.KvContext{Context: c}
+		req Certificate
+	)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		data := fmt.Sprintf("The POST payload is invalid: %s", err.Error())
-		c.JSON(http.StatusBadRequest, MakeResponse(e.INVALID_PARAMS, data))
+		app.Response(http.StatusBadRequest, e.INVALID_PARAMS, data)
 		return
 	}
-	err := models.CreateCertificateRequest(
-		req.Name,
-		req.SignRequest,
-		crypt.EncodeByte(crypt.GenerateRandomKey(20)),
-	)
+
+	var cs certificate_service.Certificate
+
+	data, err := cs.Create(req.Name, req.SignRequest)
 	if err != nil {
-		data := fmt.Sprintf("Error when creating record: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, MakeResponse(e.ERROR, data))
+		app.Response(http.StatusInternalServerError, e.ERROR, err.Error())
 		return
 	}
-	newCert, err := models.GetCertificate(req.Name)
-	log.Print("got from db:")
-	log.Println(newCert)
-	if err != nil {
-		data := fmt.Sprintf("Error when retrieving record: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, MakeResponse(e.ERROR, data))
-		return
-	}
-	newCert.SignRequest = crypt.KeyMask
-	c.JSON(http.StatusCreated, MakeResponse(e.SUCCESS, newCert))
+	app.Response(http.StatusCreated, e.SUCCESS, data)
 }
 
+// IssueCertificate issues certificate requests
+// TODO:
 func IssueCertificate(c *gin.Context) {
+	app := app.KvContext{Context: c}
 	// 1. Parse CSR
 	// 2. Load CA
 	// 3. Sign the CSR
@@ -63,7 +57,7 @@ func IssueCertificate(c *gin.Context) {
 	var csrPEM certio.CertificateRequest
 	if err := c.ShouldBindJSON(&csrPEM); err != nil {
 		data := fmt.Sprintf("The POST payload is invalid: %s", err.Error())
-		c.JSON(http.StatusBadRequest, MakeResponse(e.INVALID_PARAMS, data))
+		app.Response(http.StatusBadRequest, e.INVALID_PARAMS, data)
 		return
 	}
 	log.Println(csrPEM)
@@ -73,24 +67,29 @@ func IssueCertificate(c *gin.Context) {
 	var r certio.CertificateResponse
 	r.Certificate, r.CA = certio.IssueCertificate(csrPEM.Request)
 
-	c.JSON(http.StatusCreated, MakeResponse(e.SUCCESS, r))
+	app.Response(http.StatusCreated, e.SUCCESS, r)
 }
 
 func GetCACertificate(c *gin.Context) {
 	log.Print("reading CA certificate")
-	r := CACertificate{Certificate: certio.CaContainer.String}
-	c.JSON(http.StatusOK, MakeResponse(e.SUCCESS, r))
+	var (
+		app = app.KvContext{Context: c}
+		cs  certificate_service.Certificate
+	)
+	r := CACertificate{Certificate: cs.GetCA()}
+	app.Response(http.StatusOK, e.SUCCESS, r)
 }
 
 func GetCertificate(c *gin.Context) {
 	app := app.KvContext{Context: c}
 	q := c.Query("q")
-	log.Printf("got query for %s", q)
+	log.Printf("got query for %s,validating query string", q)
+
 	var cs certificate_service.Certificate
 	cert, err := cs.Get(q)
 	if err != nil {
-		// data := fmt.Sprintf("failed to get certificate %s", q)
-		app.Response(http.StatusNotFound, e.NOT_FOUND, nil)
+		data := fmt.Sprintf("failed to get certificate %s", q)
+		app.Response(http.StatusNotFound, e.NOT_FOUND, data)
 		return
 	}
 	app.Response(http.StatusOK, e.SUCCESS, cert)

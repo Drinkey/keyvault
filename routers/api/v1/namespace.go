@@ -50,7 +50,7 @@ func CreateNamespace(c *gin.Context) {
 		return
 	}
 
-	if !IsClientAuthorized(c.Request, req.Name) {
+	if !app.IsClientAuthorized(req.Name) {
 		msg := fmt.Sprintf(`Mismatched OU in Certificate and Namespace`)
 		app.Response(http.StatusUnauthorized, e.NOT_AUTHORIED, msg)
 		return

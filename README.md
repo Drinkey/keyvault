@@ -8,6 +8,19 @@ Practice Project: key vault to store your secrets, provide RESTFul API, build wi
 
 > Just a practice project, it works in internal network. It's not a production-ready application.
 
+Structure
+```
++------------------+
+|        API       |
++------------------+
+|      Services    |
++------------------+
+|  CertIO |   pkg  |
++---------+--------+
+|       Models     |
++------------------+
+
+```
 # Features
 
 - client and server use certificate to validate each other
