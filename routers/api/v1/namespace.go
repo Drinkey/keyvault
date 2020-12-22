@@ -56,11 +56,9 @@ func CreateNamespace(c *gin.Context) {
 		return
 	}
 
-	namespaceService := namespace_service.Namespace{
-		Name: req.Name,
-	}
+	var nss namespace_service.Namespace
 
-	err := namespaceService.Create()
+	err := nss.Create(req.Name)
 	if err != nil {
 		app.Response(http.StatusInternalServerError, e.ERROR,
 			fmt.Sprintf("Error when creating new namespace %s: %s", req.Name, err.Error()),
@@ -68,7 +66,7 @@ func CreateNamespace(c *gin.Context) {
 		return
 	}
 
-	newNs, err := namespaceService.Get()
+	newNs, err := nss.Get(req.Name)
 	if err != nil {
 		app.Response(http.StatusNotFound, e.NOT_FOUND,
 			fmt.Sprintf("Error when getting new namespace %s just created: %s", req.Name, err.Error()),

@@ -12,16 +12,16 @@ type Namespace struct {
 	Nonce     string `json:"nonce"`
 }
 
-func (n Namespace) Create() error {
+func (n Namespace) Create(name string) error {
 	return models.CreateNamespace(
-		n.Name,
+		name,
 		crypt.EncodeByte(crypt.GenerateMasterKey()),
 		crypt.EncodeByte(crypt.GenerateNonce()),
 	)
 }
 
-func (n Namespace) Get() (*models.Namespace, error) {
-	newNs, err := models.GetNamespace(n.Name)
+func (n Namespace) Get(name string) (*models.Namespace, error) {
+	newNs, err := models.GetNamespace(name)
 	if err != nil {
 		return nil, err
 	}
