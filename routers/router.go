@@ -5,9 +5,18 @@ Package routers implements URL route of keyvault service
 package routers
 
 import (
+	_ "github.com/Drinkey/keyvault/docs"
 	v1 "github.com/Drinkey/keyvault/routers/api/v1"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+func InitAPIRouter() *gin.Engine {
+	r := gin.New()
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	return r
+}
 
 // InitRouter creates a gin handler and setup API routes
 func InitRouter() *gin.Engine {
@@ -17,6 +26,7 @@ func InitRouter() *gin.Engine {
 	apiV1 := r.Group("/api/v1")
 	{
 		apiV1.GET("/ping", v1.Ping)
+
 		// only list namespace of vault
 		apiV1.GET("/namespace", v1.ListNamespaces)
 		apiV1.POST("/namespace", v1.CreateNamespace)

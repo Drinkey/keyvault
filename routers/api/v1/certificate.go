@@ -24,6 +24,17 @@ type CACertificate struct {
 	Certificate string `json:"ca"`
 }
 
+// CreateCertificateRequest create a new CSR records in database
+// @Summary create a new CSR records in database
+// @Description create a new CSR records in database
+// @Produce json
+// @Tags Certificate
+// @Param body body Certificate true "body"
+// @Success 200 {string} string "ok"
+// @Failure 400 {string} string "err"
+// @Failure 401 {string} string "err"
+// @Failure 500 {string} string "err"
+// @Router /api/v1/cert [post]
 func CreateCertificateRequest(c *gin.Context) {
 
 	var (

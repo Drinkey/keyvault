@@ -1,0 +1,67 @@
+basePath: /api/v1
+definitions:
+  v1.Certificate:
+    properties:
+      certificate:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      req:
+        type: string
+      token:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Keyvault API Document
+  termsOfService: http://swagger.io/terms/
+  title: Keyvault API Document
+  version: "1.0"
+paths:
+  /api/v1/cert:
+    post:
+      description: create a new CSR records in database
+      parameters:
+      - description: body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1.Certificate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "400":
+          description: err
+          schema:
+            type: string
+        "401":
+          description: err
+          schema:
+            type: string
+        "500":
+          description: err
+          schema:
+            type: string
+      summary: create a new CSR records in database
+      tags:
+      - Certificate
+  /api/v1/ping:
+    get:
+      description: probing
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok" "PONG
+          schema:
+            type: string
+      summary: Response to service probing
+swagger: "2.0"
