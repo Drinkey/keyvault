@@ -4,8 +4,8 @@
         "password": "K3yvau1tP4ss0rd!"
     },
     "service": {
-        "tls_port": 443,
-        "api_port": 8080
+        "tls_port": "443",
+        "api_port": "8080"
     },
     "certificates": {
         "web": {

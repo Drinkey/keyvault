@@ -35,6 +35,7 @@ replace (
 	github.com/Drinkey/keyvault/pkg/e => ./pkg/e
 	github.com/Drinkey/keyvault/pkg/utils => ./pkt/utils
 	github.com/Drinkey/keyvault/routers => ./routers
+	github.com/Drinkey/keyvault/pkg/settings => ./pkg/settings
 	github.com/Drinkey/keyvault/services/certificate_service => ./services/certificate_service
 	github.com/Drinkey/keyvault/services/namespace_service => ./services/namespace_service
 	github.com/Drinkey/keyvault/services/secret_service => ./services/secret_service

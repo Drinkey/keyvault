@@ -3,73 +3,44 @@ package certio
 import (
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
+
+	"github.com/Drinkey/keyvault/pkg/settings"
 )
-
-type Subject struct {
-	Organization string `json:"organization"`
-	Country      string `json:"country"`
-	Province     string `json:"province"`
-	Locality     string `json:"locality"`
-	Address      string `json:"address"`
-	PostalCode   string `json:"postal_code"`
-	CommonName   string `json:"common_name"`
-}
-
-type CaCertConfig struct {
-	SerialNumber int64   `json:"serial_number"`
-	Subject      Subject `json:"subject"`
-	Valid        int     `json:"valid_year"`
-	KeyLength    int     `json:"key_length"`
-}
-
-type WebCertConfig struct {
-	SerialNumber int64   `json:"serial_number"`
-	Subject      Subject `json:"subject"`
-	DNSName      string  `json:"dns_name"`
-	Valid        int     `json:"valid_year"`
-	KeyLength    int     `json:"key_length"`
-}
-
-type CertJSON struct {
-	CA  CaCertConfig  `json:"ca"`
-	Web WebCertConfig `json:"web"`
-}
 
 type CertificateAuthority struct {
 	Certificate *x509.Certificate
 	String      string
-
-	certFlag   bool // true if already set
-	PrivateKey *rsa.PrivateKey
-	pkeyFlag   bool // true if already set
+	certFlag    bool // true if already set
+	PrivateKey  *rsa.PrivateKey
+	pkeyFlag    bool // true if already set
 }
 
+// Cache saves CA cert and CA private key in memory, and keeps CA cert in PEM encoded
+// string in CertificateAuthority.String
 func (c *CertificateAuthority) Cache(cert *x509.Certificate, s string, p *rsa.PrivateKey) {
-	c.SetCertificate(cert)
-	c.SetPrivateKey(p)
+	c.setCertificate(cert)
+	c.setPrivateKey(p)
 	c.String = s
 }
 
-func (c *CertificateAuthority) SetCertificate(cert *x509.Certificate) {
+func (c *CertificateAuthority) setCertificate(cert *x509.Certificate) {
 	c.Certificate = cert
 	c.certFlag = true
 }
 
-func (c *CertificateAuthority) SetPrivateKey(p *rsa.PrivateKey) {
+func (c *CertificateAuthority) setPrivateKey(p *rsa.PrivateKey) {
 	c.PrivateKey = p
 	c.pkeyFlag = true
 }
 
+// IsSet returns true if certificate and private key are already cached
 func (c CertificateAuthority) IsSet() bool {
 	return c.certFlag && c.pkeyFlag
 }
 
-// CertFilePath Stores certificate related file path
+// CertFilePaths is a collection of certificate related file paths
 type CertFilePaths struct {
 	CaCertPath     string
 	CaPrivKeyPath  string
@@ -77,43 +48,23 @@ type CertFilePaths struct {
 	WebPrivKeyPath string
 }
 
+// CertificateConfiguration has all parameters of certio configuration
 type CertificateConfiguration struct {
 	Paths  CertFilePaths
 	dir    string
 	file   string // the JSON config file
-	config *CertJSON
+	config *settings.CertJSON
 }
 
+// Parse initializes the parameters from settings.Settings
 func (config *CertificateConfiguration) Parse() {
-	config.getKvCertDir()
-	config.getKvCertConfig()
+	config.config = &settings.Settings.Certificate
+	config.dir = settings.Settings.CertificateDir
+	config.file = settings.Settings.ConfigFile
 	config.getCertPaths()
-	config.parseJSON()
-}
-
-func (config *CertificateConfiguration) parseJSON() {
-	var schema *CertJSON
-	log.Printf("reading config file %s", config.file)
-	contentBytes, _ := ioutil.ReadFile(config.file)
-	_ = json.Unmarshal(contentBytes, &schema)
-	config.config = schema
-	log.Println(config.config)
-}
-
-func (config *CertificateConfiguration) getKvCertDir() {
-	log.Print("reading env cert dir")
-	config.dir = os.Getenv("KV_CERT_DIR")
-	log.Printf("got config.dir = %s", config.dir)
-}
-
-func (config *CertificateConfiguration) getKvCertConfig() {
-	log.Print("reading env cert config")
-	config.file = os.Getenv("KV_CERT_CONF")
-	log.Printf("got config.file = %s", config.file)
 }
 
 func (config *CertificateConfiguration) getCertPaths() {
-	// var dir = getKvCertDir()
 	log.Printf("got cert dir %s", config.dir)
 	const caFile = "ca.crt"
 	const certFile = "cert.pem"

@@ -2,23 +2,19 @@ package models
 
 import (
 	"log"
-	"os"
 
+	"github.com/Drinkey/keyvault/pkg/settings"
 	"github.com/Drinkey/keyvault/pkg/utils"
 	_ "github.com/mattn/go-sqlite3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-func getDbPath() string {
-	return os.Getenv("KV_DB_PATH")
-}
-
 var db *gorm.DB
 
 func init() {
 	log.SetPrefix("model - ")
-	dbPath := getDbPath()
+	dbPath := settings.Settings.DatabasePath
 
 	dsn := dbPath
 

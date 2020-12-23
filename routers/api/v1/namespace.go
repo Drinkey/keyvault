@@ -69,7 +69,8 @@ func CreateNamespace(c *gin.Context) {
 	newNs, err := nss.Get(req.Name)
 	if err != nil {
 		app.Response(http.StatusNotFound, e.NOT_FOUND,
-			fmt.Sprintf("Error when getting new namespace %s just created: %s", req.Name, err.Error()),
+			fmt.Sprintf("Error when getting new namespace %s just created: %s",
+				req.Name, err.Error()),
 		)
 		return
 	}

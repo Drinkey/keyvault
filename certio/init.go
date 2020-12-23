@@ -74,6 +74,7 @@ func initCaContainer() {
 
 	if CaContainer.IsSet() {
 		log.Print("CA Cache already set, no need to init")
+		return
 	}
 	log.Printf("First time load CA, Storing CA in memory when creating web certificate")
 	var ca CA

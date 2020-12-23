@@ -7,10 +7,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Drinkey/keyvault/pkg/settings"
 	"github.com/Drinkey/keyvault/pkg/utils"
 )
 
 func setup() (dir, config string) {
+	log.Print("Test Setup")
 	pwd, err := os.Getwd()
 	if err != nil {
 		log.Println(err)
@@ -21,44 +23,18 @@ func setup() (dir, config string) {
 	os.Mkdir(testDir, 0777)
 
 	os.Setenv("KV_CERT_DIR", testDir)
-	os.Setenv("KV_CERT_CONF", testConfig)
+	os.Setenv("KV_CONFIG_FILE", testConfig)
+	os.Setenv("KV_DB_PATH", "")
+	settings.Settings.Parse()
 	return testDir, testConfig
 }
 
 func teardown(dir string) {
 	os.RemoveAll(dir)
 	os.Unsetenv("KV_CERT_DIR")
-	os.Unsetenv("KV_CERT_CONF")
+	os.Unsetenv("KV_CONFIG_FILE")
 }
-func TestCertificateConfigurationParsing(t *testing.T) {
-	testDir, testConfig := setup()
-	var cfg CertificateConfiguration
-	cfg.Parse()
-	if cfg.dir != testDir {
-		t.Fail()
-	}
-	if cfg.file != testConfig {
-		t.Fail()
-	}
 
-	if cfg.config.CA.Subject.CommonName != "keyvault.org" {
-		t.Fail()
-	}
-
-	if !strings.Contains(cfg.Paths.CaCertPath, testDir) {
-		t.Fail()
-	}
-	if !strings.Contains(cfg.Paths.CaPrivKeyPath, testDir) {
-		t.Fail()
-	}
-	if !strings.Contains(cfg.Paths.WebCertPath, testDir) {
-		t.Fail()
-	}
-	if !strings.Contains(cfg.Paths.WebPrivKeyPath, testDir) {
-		t.Fail()
-	}
-	teardown(testDir)
-}
 func TestCertificateCASelfSigned(t *testing.T) {
 	setup()
 	var cfg CertificateConfiguration
@@ -72,7 +48,7 @@ func TestCertificateCASelfSigned(t *testing.T) {
 	}
 	err = ca.privateKey.Save(cfg.Paths.CaPrivKeyPath, capkey)
 	if err != nil {
-		t.Log("save private key failed")
+		t.Logf("save private key failed: %s", err.Error())
 		t.Log(err)
 		t.Fail()
 	}

@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/big"
 
+	"github.com/Drinkey/keyvault/pkg/settings"
 	"github.com/Drinkey/keyvault/pkg/utils"
 )
 
@@ -18,7 +19,7 @@ const (
 	CertificateType = "CERTIFICATE"
 )
 
-func getSubjectName(subject Subject) pkix.Name {
+func getSubjectName(subject settings.Subject) pkix.Name {
 	return pkix.Name{
 		Organization:  []string{subject.Organization},
 		Country:       []string{subject.Country},
@@ -35,7 +36,7 @@ type WebCertificate struct {
 	privateKey PrivateKey
 }
 
-func (c WebCertificate) CreateTemplate(config WebCertConfig) *x509.Certificate {
+func (c WebCertificate) CreateTemplate(config settings.WebCertConfig) *x509.Certificate {
 	NotBefore, NotAfter := utils.TimeRange(config.Valid)
 	return &x509.Certificate{
 		SerialNumber: big.NewInt(config.SerialNumber),
@@ -65,7 +66,7 @@ type CA struct {
 	String     string //CA Cert in string
 }
 
-func (ca CA) CreateTemplate(config CaCertConfig) *x509.Certificate {
+func (ca CA) CreateTemplate(config settings.CaCertConfig) *x509.Certificate {
 	NotBefore, NotAfter := utils.TimeRange(config.Valid)
 
 	return &x509.Certificate{
