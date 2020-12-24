@@ -39,6 +39,10 @@ func TestCertificateCASelfSigned(t *testing.T) {
 	setup()
 	var cfg CertificateConfiguration
 	cfg.Parse()
+	t.Log("Current setting")
+	t.Log(settings.Settings)
+	t.Log("Current config")
+	t.Log(cfg)
 
 	var ca CA
 	capkey, err := ca.privateKey.Generate(cfg.config.CA.KeyLength)
@@ -75,6 +79,10 @@ func TestCertificateManSignCertificate(t *testing.T) {
 	setup()
 	var cfg CertificateConfiguration
 	cfg.Parse()
+	t.Log("Current setting")
+	t.Log(settings.Settings)
+	t.Log("Current config")
+	t.Log(cfg)
 
 	var ca CA
 	cacert, caprivkey := ca.Load(cfg.Paths.CaCertPath, cfg.Paths.CaPrivKeyPath)
@@ -115,6 +123,10 @@ func TestCertificateCACertString(t *testing.T) {
 	setup()
 	var cfg CertificateConfiguration
 	cfg.Parse()
+	t.Log("Current setting")
+	t.Log(settings.Settings)
+	t.Log("Current config")
+	t.Log(cfg)
 
 	var ca CA
 	pem := ca.Read(cfg.Paths.CaCertPath)
