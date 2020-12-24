@@ -42,11 +42,11 @@ func CreateWebCertificate(cfg CertificateConfiguration) error {
 
 	var web WebCertificate
 
-	webPrivkey, err := web.PrivateKey.Generate(Cfg.config.Web.KeyLength)
+	webPrivkey, err := web.PrivKey.Generate(Cfg.config.Web.KeyLength)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = web.PrivateKey.Save(Cfg.Paths.WebPrivKeyPath, webPrivkey)
+	err = web.PrivKey.Save(Cfg.Paths.WebPrivKeyPath, webPrivkey)
 	if err != nil {
 		log.Print("save web cert private key failed")
 		log.Fatal(err)

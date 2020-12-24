@@ -40,11 +40,11 @@ func (c *ClientCommand) initCertificate() {
 
 	var web certio.WebCertificate
 
-	webPrivkey, err := web.PrivateKey.Generate(c.Configuration.Certificate.KeyLength)
+	webPrivkey, err := web.PrivKey.Generate(c.Configuration.Certificate.KeyLength)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = web.PrivateKey.Save(clientPrivKeyPath, webPrivkey)
+	err = web.PrivKey.Save(clientPrivKeyPath, webPrivkey)
 	if err != nil {
 		log.Print("save web cert private key failed")
 		log.Fatal(err)

@@ -75,7 +75,7 @@ func TestCertificateCASelfSigned(t *testing.T) {
 	// teardown(testDir)
 }
 
-func TestCertificateManSignCertificate(t *testing.T) {
+func TestCertificateSignCertificate(t *testing.T) {
 	setup()
 	var cfg CertificateConfiguration
 	cfg.Parse()
@@ -88,12 +88,12 @@ func TestCertificateManSignCertificate(t *testing.T) {
 	cacert, caprivkey := ca.Load(cfg.Paths.CaCertPath, cfg.Paths.CaPrivKeyPath)
 
 	var web WebCertificate
-	webpkey, err := web.PrivateKey.Generate(cfg.config.Web.KeyLength)
+	webpkey, err := web.PrivKey.Generate(cfg.config.Web.KeyLength)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
 	}
-	err = web.PrivateKey.Save(cfg.Paths.WebPrivKeyPath, webpkey)
+	err = web.PrivKey.Save(cfg.Paths.WebPrivKeyPath, webpkey)
 	if err != nil {
 		t.Log("save private key failed")
 		t.Log(err)
@@ -114,7 +114,7 @@ func TestCertificateManSignCertificate(t *testing.T) {
 	}
 	web.Save(cfg.Paths.WebCertPath, webCert)
 	if !utils.FileExist(cfg.Paths.WebCertPath) {
-		t.Logf("CA Cert file does not exist after save: %s", cfg.Paths.WebCertPath)
+		t.Logf("Web Cert file does not exist after save: %s", cfg.Paths.WebCertPath)
 		t.Fail()
 	}
 }
