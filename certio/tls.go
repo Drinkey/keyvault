@@ -12,18 +12,14 @@ import (
 	"os"
 )
 
-func CreateTLSConfig(c CertFilePaths) (*tls.Config, error) {
+func prepareServiceCertificates(c CertFilePaths) ([]byte, tls.Certificate) {
 	// 1. load ca to cert pool
 	// 2. load cert and key
 	// 3. construct tls config
+
 	caPEM, err := ioutil.ReadFile(c.CaCertPath)
 	if err != nil {
 		log.Panic("load CA certificate failed, unable to recover")
-	}
-	roots := x509.NewCertPool()
-	ok := roots.AppendCertsFromPEM(caPEM)
-	if !ok {
-		log.Panic("append CA certificate to CertPool failed")
 	}
 
 	cert, err := tls.LoadX509KeyPair(c.WebCertPath, c.WebPrivKeyPath)
@@ -31,17 +27,31 @@ func CreateTLSConfig(c CertFilePaths) (*tls.Config, error) {
 		log.Panic("load server certificate failed")
 	}
 
-	return &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    roots,
-	}, nil
+	return caPEM, cert
 }
 
-func BuildTLSConfig(certs CertFilePaths) *tls.Config {
-	tlsConfig, err := CreateTLSConfig(certs)
-	if err != nil {
-		log.Panic("create TLS server config failed")
+func BuildTLSConfig(certs CertFilePaths, level string) *tls.Config {
+	clientAuthMap := map[string]tls.ClientAuthType{
+		"SECRET":      tls.RequireAndVerifyClientCert,
+		"MAINTENANCE": tls.VerifyClientCertIfGiven,
+	}
+	auth, ok := clientAuthMap[level]
+	if !ok {
+		log.Panic("unable to create client auth profile because level is unknown")
+	}
+	log.Printf("Build config for %s, type: %d", level, auth)
+
+	caPEM, webcert := prepareServiceCertificates(certs)
+
+	roots := x509.NewCertPool()
+	ok = roots.AppendCertsFromPEM(caPEM)
+	if !ok {
+		log.Panic("append CA certificate to CertPool failed")
+	}
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{webcert},
+		ClientAuth:   auth,
+		ClientCAs:    roots,
 	}
 	tlsConfig.BuildNameToCertificate()
 	return tlsConfig

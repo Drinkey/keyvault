@@ -12,8 +12,10 @@ type Account struct {
 	Password string `json:"password"`
 }
 type Service struct {
-	TLSPort int `json:"tls_port"`
-	APIPort int `json:"api_port"`
+	DefaultTLSPort   int      `json:"default_tls_port"`
+	SecretTLSPort    int      `json:"secret_tls_port"`
+	APIPort          int      `json:"api_port"`
+	TrustedLocations []string `json:"trusted_locations"`
 }
 
 // Settings stores all values of configuration, make it singleton

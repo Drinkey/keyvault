@@ -12,11 +12,49 @@ import (
 )
 
 var g errgroup.Group
+var certPaths certio.CertFilePaths
 
-func getRouter() *gin.Engine {
-	router := gin.Default()
+func createHTTPSServer(level, port string) error {
+	var r *gin.Engine
+	switch level {
+	case "SECRET":
+		r = routers.InitSecretRouter()
+	case "MAINTENANCE":
+		r = routers.InitDefaultRouter()
+	}
 
-	return router
+	tlsConfig := certio.BuildTLSConfig(certPaths, level)
+	secretServer := &http.Server{
+		Addr:      port,
+		Handler:   r,
+		TLSConfig: tlsConfig,
+	}
+	err := secretServer.ListenAndServeTLS(certPaths.WebCertPath, certPaths.WebPrivKeyPath)
+	if err != nil && err != http.ErrServerClosed {
+		log.Fatal(err)
+	}
+	return err
+}
+
+func createSecretServer() error {
+	return createHTTPSServer("SECRET", ":443")
+}
+
+func createDefaultServer() error {
+	return createHTTPSServer("MAINTENANCE", ":1443")
+}
+
+func createHTTPServer() error {
+	apiServerHandler := routers.InitAPIRouter()
+	apiServer := &http.Server{
+		Addr:    ":8080",
+		Handler: apiServerHandler,
+	}
+	err := apiServer.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		log.Fatal(err)
+	}
+	return err
 }
 
 // @title Keyvault API Document
@@ -28,37 +66,11 @@ func getRouter() *gin.Engine {
 // @query.collection.format multi
 
 func main() {
-	r := routers.InitRouter()
+	certPaths = certio.Cfg.Paths
 
-	certPaths := certio.Cfg.Paths
-
-	tlsConfig := certio.BuildTLSConfig(certPaths)
-
-	httpServer := &http.Server{
-		Addr:      ":443",
-		Handler:   r,
-		TLSConfig: tlsConfig,
-	}
-	g.Go(func() error {
-		err := httpServer.ListenAndServeTLS(certPaths.WebCertPath, certPaths.WebPrivKeyPath)
-		if err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
-		}
-		return err
-	})
-
-	apiServerHandler := routers.InitAPIRouter()
-	apiServer := &http.Server{
-		Addr:    ":8080",
-		Handler: apiServerHandler,
-	}
-	g.Go(func() error {
-		err := apiServer.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
-		}
-		return err
-	})
+	g.Go(createSecretServer)
+	g.Go(createDefaultServer)
+	g.Go(createHTTPServer)
 
 	if err := g.Wait(); err != nil {
 		log.Fatal(err)

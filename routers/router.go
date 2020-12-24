@@ -12,20 +12,34 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+/*
+Classify Routers by endpoint required security level
+- API:
+	HTTP
+- Secret:
+	HTTPS + Verify client certificate
+- Default(Maintenance):
+	HTTPS + trusted location + user/pass, no client certificate verification
+*/
+
+const currentAPIVersion = "/api/v1"
+
+// InitAPIRouter creates a gin handler and serve swagger API documentation
 func InitAPIRouter() *gin.Engine {
 	r := gin.New()
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/ping", v1.Ping)
 	return r
 }
 
-// InitRouter creates a gin handler and setup API routes
-func InitRouter() *gin.Engine {
+// InitSecretRouter creates a gin handler and setup API routes for secret access
+func InitSecretRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
-	apiV1 := r.Group("/api/v1")
+	apiV1 := r.Group(currentAPIVersion)
 	{
-		apiV1.GET("/ping", v1.Ping)
+		apiV1.GET("/pings", v1.Ping)
 
 		// only list namespace of vault
 		apiV1.GET("/namespace", v1.ListNamespaces)
@@ -42,7 +56,18 @@ func InitRouter() *gin.Engine {
 		// apiV1.DELETE("/vault/:namespace", v1.DeleteSecret)
 		// TODO: only value can be updated, namespace and key can't
 		// v1.PUT("/vault/:namespace", v1.UpdateSecret)
+	}
+	return r
+}
 
+// InitDefaultRouter creates a gin handler and setup API routes for maintenance functions
+func InitDefaultRouter() *gin.Engine {
+	r := gin.New()
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+	apiV1 := r.Group(currentAPIVersion)
+	{
+		apiV1.GET("/ping", v1.Ping)
 		// Certificate need extra works, auth or token
 		// we may need this API exposed in HTTP, not HTTPS
 		apiV1.POST("/cert/req", v1.CreateCertificateRequest)
@@ -56,7 +81,6 @@ func InitRouter() *gin.Engine {
 
 		// TODO: only limited user should be able to access this API, how
 		// apiV1.POST("/cert/issue", v1.CreateCertificateRequest)
-
 	}
 	return r
 }
