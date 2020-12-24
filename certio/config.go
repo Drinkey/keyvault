@@ -51,27 +51,27 @@ type CertFilePaths struct {
 // CertificateConfiguration has all parameters of certio configuration
 type CertificateConfiguration struct {
 	Paths  CertFilePaths
-	dir    string
-	file   string // the JSON config file
+	Dir    string
+	File   string // the JSON config file
 	config *settings.CertJSON
 }
 
 // Parse initializes the parameters from settings.Settings
 func (config *CertificateConfiguration) Parse() {
 	config.config = &settings.Settings.Certificate
-	config.dir = settings.Settings.CertificateDir
-	config.file = settings.Settings.ConfigFile
+	config.Dir = settings.Settings.CertificateDir
+	config.File = settings.Settings.ConfigFile
 	config.getCertPaths()
 }
 
 func (config *CertificateConfiguration) getCertPaths() {
-	log.Printf("got cert dir %s", config.dir)
+	log.Printf("got cert dir %s", config.Dir)
 	const caFile = "ca.crt"
 	const certFile = "cert.pem"
 	config.Paths = CertFilePaths{
-		CaCertPath:     fmt.Sprintf("%s/%s", config.dir, caFile),
-		CaPrivKeyPath:  fmt.Sprintf("%s/ca_priv.key", config.dir),
-		WebCertPath:    fmt.Sprintf("%s/%s", config.dir, certFile),
-		WebPrivKeyPath: fmt.Sprintf("%s/cert_priv.key", config.dir),
+		CaCertPath:     fmt.Sprintf("%s/%s", config.Dir, caFile),
+		CaPrivKeyPath:  fmt.Sprintf("%s/ca_priv.key", config.Dir),
+		WebCertPath:    fmt.Sprintf("%s/%s", config.Dir, certFile),
+		WebPrivKeyPath: fmt.Sprintf("%s/cert_priv.key", config.Dir),
 	}
 }

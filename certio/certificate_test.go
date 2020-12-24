@@ -80,12 +80,12 @@ func TestCertificateManSignCertificate(t *testing.T) {
 	cacert, caprivkey := ca.Load(cfg.Paths.CaCertPath, cfg.Paths.CaPrivKeyPath)
 
 	var web WebCertificate
-	webpkey, err := web.privateKey.Generate(cfg.config.Web.KeyLength)
+	webpkey, err := web.PrivateKey.Generate(cfg.config.Web.KeyLength)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
 	}
-	err = web.privateKey.Save(cfg.Paths.WebPrivKeyPath, webpkey)
+	err = web.PrivateKey.Save(cfg.Paths.WebPrivKeyPath, webpkey)
 	if err != nil {
 		t.Log("save private key failed")
 		t.Log(err)

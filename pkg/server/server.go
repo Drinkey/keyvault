@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"log"
@@ -7,11 +7,8 @@ import (
 	"github.com/Drinkey/keyvault/certio"
 	"github.com/Drinkey/keyvault/routers"
 	"github.com/gin-gonic/gin"
-	_ "github.com/mattn/go-sqlite3"
-	"golang.org/x/sync/errgroup"
 )
 
-var g errgroup.Group
 var certPaths certio.CertFilePaths
 
 func createHTTPSServer(level, port string) error {
@@ -36,15 +33,15 @@ func createHTTPSServer(level, port string) error {
 	return err
 }
 
-func createSecretServer() error {
+func CreateSecretServer() error {
 	return createHTTPSServer("SECRET", ":443")
 }
 
-func createDefaultServer() error {
+func CreateDefaultServer() error {
 	return createHTTPSServer("MAINTENANCE", ":1443")
 }
 
-func createHTTPServer() error {
+func CreateHTTPServer() error {
 	apiServerHandler := routers.InitAPIRouter()
 	apiServer := &http.Server{
 		Addr:    ":8080",
@@ -55,24 +52,4 @@ func createHTTPServer() error {
 		log.Fatal(err)
 	}
 	return err
-}
-
-// @title Keyvault API Document
-// @version 1.0
-// @description Keyvault API Document
-
-// @host localhost:8080
-// @BasePath /api/v1
-// @query.collection.format multi
-
-func main() {
-	certPaths = certio.Cfg.Paths
-
-	g.Go(createSecretServer)
-	g.Go(createDefaultServer)
-	g.Go(createHTTPServer)
-
-	if err := g.Wait(); err != nil {
-		log.Fatal(err)
-	}
 }

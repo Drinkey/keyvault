@@ -33,7 +33,7 @@ func getSubjectName(subject settings.Subject) pkix.Name {
 
 type WebCertificate struct {
 	io         CertIO
-	privateKey PrivateKey
+	PrivateKey PrivateKey
 }
 
 func (c WebCertificate) CreateTemplate(config settings.WebCertConfig) *x509.Certificate {

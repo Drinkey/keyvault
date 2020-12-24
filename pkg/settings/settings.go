@@ -43,7 +43,7 @@ func (s *Setting) parseJSON() {
 	log.Printf("Reading config file %s", s.ConfigFile)
 	contentBytes, _ := ioutil.ReadFile(s.ConfigFile)
 	_ = json.Unmarshal(contentBytes, &s)
-	log.Println(s)
+	// log.Println(s)
 }
 
 func (s *Setting) getKvCertDir() {
@@ -66,5 +66,5 @@ func (s *Setting) getKvDatabasePath() {
 
 func init() {
 	log.SetPrefix("settings: ")
-	Settings.Parse()
+	// Settings.Parse()
 }
