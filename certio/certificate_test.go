@@ -22,17 +22,11 @@ func setup() (dir, config string) {
 	testConfig := fmt.Sprintf("%s/test_cert.json", pwd)
 	os.Mkdir(testDir, 0777)
 
-	os.Setenv("KV_CERT_DIR", testDir)
-	os.Setenv("KV_CONFIG_FILE", testConfig)
-	os.Setenv("KV_DB_PATH", "")
+	// os.Setenv("KV_CERT_DIR", testDir)
+	// os.Setenv("KV_CONFIG_FILE", testConfig)
+	// os.Setenv("KV_DB_PATH", "")
 	settings.Settings.Parse()
 	return testDir, testConfig
-}
-
-func teardown(dir string) {
-	os.RemoveAll(dir)
-	os.Unsetenv("KV_CERT_DIR")
-	os.Unsetenv("KV_CONFIG_FILE")
 }
 
 func TestCertificateCASelfSigned(t *testing.T) {
