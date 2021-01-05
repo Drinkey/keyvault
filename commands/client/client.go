@@ -1,46 +1,105 @@
 package client
 
 import (
+	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/json"
+	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"strings"
 
 	"github.com/Drinkey/keyvault/certio"
 	"github.com/Drinkey/keyvault/commands/configuration"
+	"github.com/Drinkey/keyvault/commands/restclient"
+	"github.com/Drinkey/keyvault/pkg/settings"
 )
 
+func getSubjectName(subject settings.Subject, namespace string) pkix.Name {
+	return pkix.Name{
+		Organization:       []string{subject.Organization},
+		OrganizationalUnit: []string{namespace},
+		Country:            []string{subject.Country},
+		Province:           []string{subject.Province},
+		Locality:           []string{subject.Locality},
+		StreetAddress:      []string{subject.Address},
+		PostalCode:         []string{subject.PostalCode},
+		CommonName:         subject.CommonName,
+	}
+}
+
 type ClientCommand struct {
-	Init          bool
-	ClientName    string
-	ConfigDir     string
+	io            certio.CertIO
+	Action        string // which action to take
+	ClientName    string // will be used for OU property
+	ConfigDir     string // location to store generated certs, tokens
 	Configuration configuration.Configuration
 }
 
 func (c ClientCommand) Print() {
-	log.Printf("Client: %s", c.ClientName)
+	log.Printf("Client (OU): %s", c.ClientName)
 	log.Printf("Configuration DIR: %s", c.ConfigDir)
-	// log.Printf("Certificate Config: %s", c.CertConfig)
 }
 
 func (c *ClientCommand) Run() {
 	c.Print()
 	c.Configuration.Read()
-	log.Printf("Parsed config")
-	log.Println(c.Configuration)
-	if c.Init {
+	c.Configuration.Directory = c.ConfigDir
+	api := CertificateAPI{Config: c}
+	switch c.Action {
+	case "get":
+		r, err := api.Read(c.ClientName)
+		if err != nil {
+			log.Panic("API: get certificate error")
+		}
+		//save cert to local
+		if err = c.Configuration.SaveCertificate([]byte(r.Certificate)); err != nil {
+			fmt.Printf("Save certificate failed")
+			fmt.Println(err)
+		}
+		//get CA cert
+		r, err = api.Read("ca")
+		if err != nil {
+			log.Panic("API: get CA certificate error")
+		}
+		//save cert to local
+		if err = c.Configuration.SaveCA([]byte(r.CA)); err != nil {
+			fmt.Printf("Save CA certificate failed")
+			fmt.Println(err)
+		}
+	case "init":
 		log.Printf("Initializing client...")
-		c.initCertificate()
+		ci := CertificateInitiator{Config: c}
+		// create private key pair and csr, save private key
+		csr := ci.Init()
+		log.Print("CSR and Private initialized successful.")
+		// send csr to keyvault service for signing
+		api.Create(c.ClientName, csr)
 	}
-
 }
 
-func (c *ClientCommand) initCertificate() {
-	// clientCertPath := fmt.Sprintf("%s/client.crt", c.ConfigDir)
-	clientPrivKeyPath := fmt.Sprintf("%s/client.key", c.ConfigDir)
-	// caCertPath := fmt.Sprintf("%s/ca.crt", c.ConfigDir)
+// CertificateInitiator initiates client certificates
+type CertificateInitiator struct {
+	Config *ClientCommand
+}
 
+func (c *CertificateInitiator) Init() []byte {
+	csrConfig := c.Config.Configuration.Certificate
+	// generate private key and save to destinated location
+	pk := c.initClientPrivateKey(csrConfig)
+	return c.initClientCSR(csrConfig, pk)
+}
+
+func (c *CertificateInitiator) initClientPrivateKey(csr settings.WebCertConfig) *rsa.PrivateKey {
+	clientPrivKeyPath := fmt.Sprintf("%s/client.key", c.Config.ConfigDir)
 	var web certio.WebCertificate
 
-	webPrivkey, err := web.PrivKey.Generate(c.Configuration.Certificate.KeyLength)
+	webPrivkey, err := web.PrivKey.Generate(csr.KeyLength)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,53 +108,105 @@ func (c *ClientCommand) initCertificate() {
 		log.Print("save web cert private key failed")
 		log.Fatal(err)
 	}
-
-	//Create cert request
-	// webtempl := web.CreateTemplate(c.Configuration.Certificate)
+	return webPrivkey
 }
 
-// func certificateInit(){
-// 	parse config
-// 	if cert file exist:
-// 		return
-// 	else
-// 		create pkey
+func (c *CertificateInitiator) initClientCSR(csr settings.WebCertConfig, pk *rsa.PrivateKey) []byte {
+	//Create cert request
+	template := &x509.CertificateRequest{
+		Subject:            getSubjectName(csr.Subject, c.Config.ClientName),
+		SignatureAlgorithm: x509.SHA256WithRSA,
+	}
 
-// 	if pkey file exist:
-// 		create new cert
-// 		return
-// }
+	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, template, pk)
+	if err != nil {
+		log.Print("Create certificate request error")
+		log.Fatal(err)
+	}
+	pemBuffer := new(bytes.Buffer)
+	pem.Encode(pemBuffer, &pem.Block{
+		Type:  "CERTIFICATE REQUEST",
+		Bytes: csrBytes,
+	})
+	return pemBuffer.Bytes()
+}
 
-// func createNewCertificate(){
-// 	parse cert config
-// 	set OU same as namespace
-// 	create csr PEM
-// 	parse csr PEM and replace \n with \\n (convert the file in one line)
-// 	post to service
-// 	get the signed cert and save to [namespace].crt
-// }
+type CertReq struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	SignRequest string `json:"req"`
+	Certificate string `json:"certificate"`
+	Token       string `json:"token"`
+	CA          string `json:"ca"`
+}
 
-// func createHTTPSClient() *http.Client {
-// 	// Load client cert
-// 	cert, err := tls.LoadX509KeyPair(*certFile, *keyFile)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+type Resp struct {
+	Code    int    `json:"code"`
+	Message string `json:"msg"`
+	CertReq `json:"data"`
+}
 
-// 	// Load CA cert
-// 	caCert, err := ioutil.ReadFile(*caFile)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	caCertPool := x509.NewCertPool()
-// 	caCertPool.AppendCertsFromPEM(caCert)
+// CertificateAPI interacts keyvault service /api/v*/certificate
+type CertificateAPI struct {
+	Config *ClientCommand
+	api    restclient.RESTFulClienter
+}
 
-// 	// Setup HTTPS client
-// 	tlsConfig := &tls.Config{
-// 		Certificates: []tls.Certificate{cert},
-// 		RootCAs:      caCertPool,
-// 	}
-// 	tlsConfig.BuildNameToCertificate()
-// 	transport := &http.Transport{TLSClientConfig: tlsConfig}
-// 	return &http.Client{Transport: transport}
-// }
+func (c *CertificateAPI) initAPI() {
+	if c.api == nil {
+		rclient := restclient.RESTFulClient{
+			Host:     c.Config.Configuration.Server.Host,
+			Port:     c.Config.Configuration.Server.TLSMaintenancePort,
+			Insecure: true,
+		}
+		c.api = restclient.Certificate{rclient}
+	}
+}
+
+func (c *CertificateAPI) Create(name string, csr []byte) error {
+	// create certificate item in keyvault service
+	c.initAPI()
+	csrString := string(csr)
+	encode := ""
+	for _, line := range strings.Split(csrString, "\n") {
+		encode = fmt.Sprintf("%s%s", encode, line)
+	}
+	r := CertReq{Name: name, SignRequest: csrString}
+
+	resp, err := c.api.Create("", r)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		panic(fmt.Sprintf("Create CSR in keyvault service failed, status code %d", resp.StatusCode))
+	}
+	log.Print("Create CSR in keyvault service success, wait for admin to sign the request")
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	fmt.Printf("%q", respBytes)
+	return nil
+}
+
+func (c *CertificateAPI) Read(name string) (Resp, error) {
+	c.initAPI()
+	q := map[string]string{
+		"q": name,
+	}
+	resp, err := c.api.Read("", q)
+	if err != nil {
+		log.Fatalf("failed to GET certificate %s: %s", name, err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("failed to GET certificate %s: service returns error", name)
+		log.Fatalf("status=%s", resp.Status)
+	}
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	var r Resp
+	err = json.Unmarshal(respBytes, &r)
+	if err != nil {
+		log.Printf("failed to decode response body")
+		return Resp{}, err
+	}
+	return r, nil
+}
