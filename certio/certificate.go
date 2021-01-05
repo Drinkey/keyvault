@@ -189,14 +189,15 @@ func IssueCertificate(csrString string) (certPem, caPem string) {
 
 	csr, err := req.ParsePEMString(csrString)
 	if err != nil {
-		log.Fatal("Failed to parse certificate request")
+		log.Panic("Failed to parse certificate request")
 	}
 	reqTemplate := req.CreateTemplate(csr)
 
 	var ca CA
-	reqCert, err := ca.Issue(CaContainer.Certificate, reqTemplate, &csr.PublicKey, CaContainer.PrivateKey)
+	reqCert, err := ca.Issue(CaContainer.Certificate, reqTemplate, csr.PublicKey, CaContainer.PrivateKey)
 	if err != nil {
-		log.Fatal("Issue certificate failed")
+		log.Print("Issue certificate failed")
+		log.Panic(err)
 		return
 	}
 

@@ -3,7 +3,7 @@ package models
 import "testing"
 
 func TestCertificateCreate(t *testing.T) {
-	err := CreateCertificateRequest("DB_USER", "---some-request---xxxfffwww", "tttoken")
+	err := CreateCertificateRequest("DB_USER", "---some-request---xxxfffwww", "tttoken", "signedCert")
 	if err != nil {
 		t.Log("fail to create certificate record.")
 		t.Fail()
@@ -13,7 +13,8 @@ func TestCertificateCreate(t *testing.T) {
 func TestCertificateGet(t *testing.T) {
 	certStr := "---some-request---xxxfffwww"
 	token := "some_token"
-	err := CreateCertificateRequest("DB_USER_2", certStr, token)
+	signedCert := "Signed Certificate"
+	err := CreateCertificateRequest("DB_USER_2", certStr, token, signedCert)
 	if err != nil {
 		t.Log("fail to create certificate record.")
 		t.Fail()
@@ -34,7 +35,8 @@ func TestCertificateGet(t *testing.T) {
 func TestCertificateUpdateSignedCertificateByName(t *testing.T) {
 	certStr := "---some-request---xxxfffwww"
 	token := "some_token__rand2"
-	err := CreateCertificateRequest("DB_USER_3", certStr, token)
+	signedCert := "Signed Certificate"
+	err := CreateCertificateRequest("DB_USER_3", certStr, token, signedCert)
 	if err != nil {
 		t.Log("fail to create certificate record.")
 		t.Fail()

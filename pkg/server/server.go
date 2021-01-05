@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var certPaths certio.CertFilePaths
+var certPaths = certio.Cfg.Paths
 
 func createHTTPSServer(level, port string) error {
 	var r *gin.Engine

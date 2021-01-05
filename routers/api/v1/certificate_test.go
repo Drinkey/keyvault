@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -97,19 +96,19 @@ func TestCertificateGet(t *testing.T) {
 	}
 }
 
-func TestCertificateCACertGet(t *testing.T) {
-	r := gin.Default()
-	w := httptest.NewRecorder()
-	uri := "/api/v1/cert"
-	r.GET(fmt.Sprintf("%s/ca", uri), GetCACertificate)
-	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/ca", uri), nil)
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-	var respCert CACertificate
-	resp := KvResponse{Data: &respCert}
-	json.Unmarshal(w.Body.Bytes(), &resp)
-	if !strings.Contains(respCert.Certificate, "CERTIFICATE") {
-		t.Logf("got actual response: %s", respCert.Certificate)
-		t.Fail()
-	}
-}
+// func TestCertificateCACertGet(t *testing.T) {
+// 	r := gin.Default()
+// 	w := httptest.NewRecorder()
+// 	uri := "/api/v1/cert"
+// 	r.GET(fmt.Sprintf("%s/ca", uri), GetCACertificate)
+// 	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/ca", uri), nil)
+// 	w = httptest.NewRecorder()
+// 	r.ServeHTTP(w, req)
+// 	var respCert CACertificate
+// 	resp := KvResponse{Data: &respCert}
+// 	json.Unmarshal(w.Body.Bytes(), &resp)
+// 	if !strings.Contains(respCert.Certificate, "CERTIFICATE") {
+// 		t.Logf("got actual response: %s", respCert.Certificate)
+// 		t.Fail()
+// 	}
+// }

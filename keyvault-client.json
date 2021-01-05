@@ -1,0 +1,23 @@
+{
+    "server": {
+        "host": "keyvault.org",
+        "http_port": 8080,
+        "tls_secret_port": 443,
+        "tls_maintenance_port": 1443
+    },
+    "certificate": {
+        "serial_number": 49001,
+        "subject": {
+            "organization": "KeyVault, ORG. Client",
+            "country": "CN",
+            "province": "SC",
+            "locality": "CD",
+            "address": "TSP",
+            "postal_code": "68001",
+            "common_name": "keyvault.org"
+        },
+        "dns_name": "keyvault.org",
+        "valid_year": 5,
+        "key_length": 4096
+    }
+}

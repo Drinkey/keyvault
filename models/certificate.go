@@ -12,10 +12,11 @@ func (c Certificate) IsEmpty() bool {
 	return c.ID == 0
 }
 
-func CreateCertificateRequest(name, req, token string) (err error) {
+func CreateCertificateRequest(name, req, token, certificate string) (err error) {
 	err = db.Create(&Certificate{
 		Name:        name,
 		SignRequest: req,
+		Certificate: certificate,
 		Token:       token,
 	}).Error
 	if err != nil {

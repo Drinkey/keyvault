@@ -12,18 +12,20 @@ import (
 	"os"
 )
 
-func prepareServiceCertificates(c CertFilePaths) ([]byte, tls.Certificate) {
+func LoadCertificates(c CertFilePaths) ([]byte, tls.Certificate) {
 	// 1. load ca to cert pool
 	// 2. load cert and key
 	// 3. construct tls config
 
 	caPEM, err := ioutil.ReadFile(c.CaCertPath)
 	if err != nil {
-		log.Panic("load CA certificate failed, unable to recover")
+		log.Printf("load CA certificate [%s] failed", c.CaCertPath)
+		log.Panic("panic because no CA found")
 	}
 
 	cert, err := tls.LoadX509KeyPair(c.WebCertPath, c.WebPrivKeyPath)
 	if err != nil {
+		log.Printf("cert=%s, pkey=%s", c.WebCertPath, c.WebPrivKeyPath)
 		log.Panic("load server certificate failed")
 	}
 
@@ -41,7 +43,7 @@ func BuildTLSConfig(certs CertFilePaths, level string) *tls.Config {
 	}
 	log.Printf("Build config for %s, type: %d", level, auth)
 
-	caPEM, webcert := prepareServiceCertificates(certs)
+	caPEM, webcert := LoadCertificates(certs)
 
 	roots := x509.NewCertPool()
 	ok = roots.AppendCertsFromPEM(caPEM)

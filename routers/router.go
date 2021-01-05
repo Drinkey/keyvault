@@ -70,17 +70,20 @@ func InitDefaultRouter() *gin.Engine {
 		apiV1.GET("/ping", v1.Ping)
 		// Certificate need extra works, auth or token
 		// we may need this API exposed in HTTP, not HTTPS
-		apiV1.POST("/cert/req", v1.CreateCertificateRequest)
+		apiV1.POST("/certificate", v1.CreateCertificateRequest)
 
 		// TODO: read CA cert directly from a file
-		apiV1.GET("/cert/ca", v1.GetCACertificate)
+		// apiV1.GET("/certificate/ca", v1.GetCACertificate)
 
 		// OU(name in certificate table) should be unique
 		// respond to URL like /cert/?q=k8s_password
-		apiV1.GET("/cert/", v1.GetCertificate)
+		// ?q=ca will return CA certificate
+		apiV1.GET("/certificate", v1.GetCertificate)
 
-		// TODO: only limited user should be able to access this API, how
-		// apiV1.POST("/cert/issue", v1.CreateCertificateRequest)
+		// TODO: only limited user should be able to access this API, how?
+		// this request will update existing certificate record and add
+		// certificate field with signed certificate
+		apiV1.PUT("/certificate", v1.CreateCertificateRequest)
 	}
 	return r
 }

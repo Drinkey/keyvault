@@ -27,10 +27,15 @@ func (c Certificate) Get(name string) (*models.Certificate, error) {
 }
 
 func (c Certificate) Create(name, request string) (*models.Certificate, error) {
+	log.Print("Singing the request first:")
+	log.Printf(request)
+	signedCertificate, _ := certio.IssueCertificate(request)
+	log.Printf("signed certificate: \n%s", signedCertificate)
 	err := models.CreateCertificateRequest(
 		name,
 		request,
 		crypt.EncodeByte(crypt.GenerateRandomKey(20)),
+		signedCertificate,
 	)
 	if err != nil {
 		return nil, err

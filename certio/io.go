@@ -17,6 +17,9 @@ type CertIO struct {
 
 func (c CertIO) decoder(b []byte) []byte {
 	block, _ := pem.Decode(b)
+	if block == nil {
+		log.Print("Failed to decode data as PEM")
+	}
 	return block.Bytes
 }
 

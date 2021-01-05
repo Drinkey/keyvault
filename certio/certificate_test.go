@@ -18,8 +18,10 @@ func setup() (dir, config string) {
 		log.Println(err)
 	}
 	log.Println(pwd)
+	projectRoot := utils.DirUpLevel(pwd, -1)
+	log.Println(projectRoot)
 	testDir := "/tmp/certs"
-	testConfig := fmt.Sprintf("%s/test_cert.json", pwd)
+	testConfig := fmt.Sprintf("%s/keyvaultd-config.json", projectRoot)
 	os.Mkdir(testDir, 0777)
 
 	// os.Setenv("KV_CERT_DIR", testDir)
