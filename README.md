@@ -35,143 +35,9 @@ Structure
 
 The secret still visible as a plain text to authorized client. If the client choose to print it out or log it, there is nothing we can do. The sensitive data should never been seen anywhere.
 
-# Workflow
-
-### Storing a new secret
-- client initiate the request to store a new secret, a secret is a string
-- server received the string and encode it with base64 and then encrypted by server master key, store them in database
-- if the secret already exist under same namespace, new record won't be created
-
-### Getting an existing secret
-- parse the namespace from certificate
-- query secret name under the specific namespace and return 404 Not Found if no record found
-- decrypt the encrypted text with master key of the record
-- decode the decrypted text and return to client
-
 # Usage
 
-### Namespace
-
-Creating a new namespace (aggregation of keys)
-```
-POST /v1/vault/
-{
-    "name": "GRAYLOG_USER"
-}
-
-Response 201
-{
-    "namespace_id":4,
-    "name":"GRAYLOG_USER",
-    "master_key":"******"
-}
-```
-
-Listing all namespaces
-```
-GET /v1/vault
-
-Response 200
-{
-    "namespace": [
-        {
-            "namespace_id": 1,
-            "name": "GITLAB",
-            "master_key": "******"
-        },
-        {
-            "namespace_id": 2,
-            "name": "GITLAB_CI",
-            "master_key": "******"
-        },
-        {
-            "namespace_id": 3,
-            "name": "GRAYLOG_USER",
-            "master_key": "******"
-        }
-    ]
-}
-```
-
-### Secrets
-
-List all secrets of a namespace
-```
-GET /v1/vault/:namespace
-
-Response 200
-{
-    "Kubernetes": [
-        {
-            "namespace": "Kubernetes",
-            "key": "K8S_LB_PASSWORD",
-            "value": "the!realpassw0rd"
-        },
-        {
-            "namespace": "Kubernetes",
-            "key": "K8S_ADMIN_PASSWORD",
-            "value": "the!realpassw0rd"
-        }
-    ]
-}
-
-```
-
-Getting an existing secret (in the client program, certificates deployed)
-```
-GET /v1/vault/:namespace/?q=<key>
-
-Response 200
-{
-    "namespace": "Kubernetes",
-    "key": "K8S_ADMIN_PASSWORD",
-    "value": "the!realpassw0rd"
-}
-```
-
-Creating a new secret
-
-```
-POST /v1/vault/:namespace
-{
-    "key": "K8S_ADMIN_PASSWORD",
-    "value": "the!realpassw0rd"
-}
-
-Response 201
-{
-    "message": "success/failed"
-}
-```
-
-Updating an existing secret (only support updating value since key is the condition to search)
-```
-PUT /v1/vault/:namespace
-{
-    "key": ""
-}
-```
-
-Delete an existing secret
-```
-DELETE /v1/vault/:namespace/?q=<key>
-```
-
-### Certificate
-
-Issue a CSR (human)
-```
-POST /v1/cert/sign
-{
-    "csr": "<valid_x509_content>"
-}
-
-Response 201
-{
-    "signed": "<valid_x509_content>"
-}
-```
-
+API doc can be found in /docs
 # Test
 
 ## Start the server
@@ -271,3 +137,21 @@ $ docker run --rm \
 
 Note, build with `GOOS=darwin` and `CGO_ENABLED=1` will fail on my macOS.
 
+# Other usage
+
+This tool can be also used for generate CA and web certificate files.
+
+Write your customized configuration file, update the `certificates` part with certificates details.
+```sh
+$ mkdir psonocdc
+# specify the configuration file path
+$ export KV_CONFIG_FILE=$PWD/psono.json
+# specify the dir path to store generated certificates
+$ export KV_CERT_DIR=$PWD/psonocdc
+# start the service then certificates will be generated automatically
+$ go run keyvaultd.go
+...
+# checkout the generated certificates
+$ ls psonocdc
+ca.crt        ca_priv.key   cert.pem      cert_priv.key
+```
